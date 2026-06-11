@@ -57,3 +57,6 @@ de onderwerpen-array in handleiding/main.js.
 - 2026-06-11: GSAP pagina-overgang toegevoegd aan de handleiding (zelfde
   blok als p5-cursussite): animatePageIn() in main.js + GSAP 3.13.0 CDN.
   Herbruikbare uitleg: C:\server\htdocs\building_blocks\GSAP\pagina_overgang.
+- 2026-06-11: GSAP accordeon-stagger in de nav (animateNavGroupItems():
+  menu-items glijden trapsgewijs binnen bij openklappen; immediateRender
+  tegen flits). Blok: building_blocks\GSAP\accordeon_stagger.

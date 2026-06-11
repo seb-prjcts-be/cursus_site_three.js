@@ -410,11 +410,38 @@ function slugify(text) {
 // === Navigatie ===
 
 function setGroupOpen(group, isOpen) {
+    const wasOpen = group.classList.contains('is-open');
     group.classList.toggle('is-open', isOpen);
     const toggle = group.querySelector('.nav-group-toggle');
     if (toggle) {
         toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
     }
+    if (isOpen && !wasOpen) {
+        animateNavGroupItems(group);
+    }
+}
+
+// Laat de menu-items van een net geopende navigatiegroep trapsgewijs binnenglijden (GSAP).
+// De hoogte-animatie zelf blijft bij de bestaande CSS-transition op .nav-sublist.
+function animateNavGroupItems(group) {
+    if (typeof gsap === 'undefined') return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const items = group.querySelectorAll('.nav-sublist > li');
+    if (!items.length) return;
+
+    gsap.killTweensOf(items);
+    gsap.from(items, {
+        opacity: 0,
+        x: -10,
+        duration: 0.3,
+        ease: 'power2.out',
+        stagger: 0.035,
+        // alle items meteen verbergen bij de klik; zonder dit wachten
+        // gestaggerde items met hun startwaarde tot hun beurt (flits)
+        immediateRender: true,
+        clearProps: 'opacity,transform'
+    });
 }
 
 function updateActiveNav(activeId) {
