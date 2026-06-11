@@ -1,0 +1,148 @@
+<div class="intro">
+    <p>Real 3D letters with depth, that cast shadows and shine like any other object. You need two addons for it: a FontLoader and the TextGeometry.</p>
+</div>
+
+<div class="kernpunten">
+    <span class="kernpunten-label">What you will learn</span>
+    <ul>
+        <li>3D text is just a geometry: <code>TextGeometry</code> + material = mesh</li>
+        <li>The font is a special JSON file, loaded with the <code>FontLoader</code></li>
+        <li>Loading is asynchronous: you build the text <strong>in the callback</strong>, like with loadFont in p5</li>
+        <li><code>geometry.center()</code> puts the pivot point in the middle of the text</li>
+    </ul>
+</div>
+
+<section>
+    <h2>The recipe</h2>
+    <pre><code>import { FontLoader } from 'three/addons/loaders/FontLoader.js';
+import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
+
+new FontLoader().load('path/to/font.typeface.json', (font) => {
+  const geom = new TextGeometry('HELLO', {
+    font: font,
+    size: 1,        // height of the letters
+    depth: 0.3,     // thickness (the third dimension!)
+    curveSegments: 8
+  });
+  geom.center();    // otherwise the text rotates around its left side
+
+  const text = new THREE.Mesh(geom, material);
+  scene.add(text);
+});</code></pre>
+    <p>Compare with p5: loadFont in preload, then text(). Here everything happens in the load callback, because without a font there is no geometry. The rest of your sketch (renderer, loop) just keeps running while the font loads.</p>
+</section>
+
+<section>
+    <h2>Try it: type your own word</h2>
+    <p>The font comes from your local three.js clone. Change 'LAB44' to your own text and click Run:</p>
+
+    <div class="three-editor" data-autorun="true">
+        <script type="text/three">
+import * as THREE from 'three';
+import { FontLoader } from 'three/addons/loaders/FontLoader.js';
+import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x141414);
+
+const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.1, 100);
+camera.position.z = 6;
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+document.body.appendChild(renderer.domElement);
+
+const sun = new THREE.DirectionalLight(0xffffff, 3);
+sun.position.set(2, 3, 5);
+scene.add(sun, new THREE.AmbientLight(0xffffff, 0.3));
+
+let text = null;    // only exists once the font has loaded
+
+new FontLoader().load(
+  '../three.js/examples/fonts/helvetiker_bold.typeface.json',
+  (font) => {
+    const geom = new TextGeometry('LAB44', {
+      font: font,
+      size: 1.2,
+      depth: 0.4,
+      curveSegments: 8
+    });
+    geom.center();
+
+    text = new THREE.Mesh(geom, new THREE.MeshStandardMaterial({
+      color: 0xff007d,
+      roughness: 0.25,
+      metalness: 0.4
+    }));
+    scene.add(text);
+  }
+);
+
+const timer = new THREE.Timer();
+renderer.setAnimationLoop(() => {
+  timer.update();
+  const t = timer.getElapsed();
+
+  if (text) {                        // only animate once it exists
+    text.rotation.y = Math.sin(t * 0.8) * 0.6;
+    text.position.y = Math.sin(t * 1.6) * 0.2;
+  }
+
+  renderer.render(scene, camera);
+});
+        </script>
+    </div>
+
+    <aside class="callout callout--tip">
+        <p>Note the pattern let text = null and if (text) in the loop. That is THE way to handle asynchronously loaded things - you will see it come back later with 3D models too.</p>
+    </aside>
+
+    <aside class="callout callout--let-op">
+        <span class="callout-label">Watch out</span>
+        <p>Many letters with many curveSegments become heavy geometries. For a title that is fine; for a whole paragraph of text you are better off using a plane with a canvas texture, or simply HTML on top of your canvas.</p>
+    </aside>
+</section>
+
+<section>
+    <h2>Your own fonts</h2>
+    <p>The clone has a few fonts ready in <code>three.js/examples/fonts/</code> (helvetiker, optimer, gentilis - each in regular and bold). If you want to use your own font, search online for a "typeface.json converter": it turns an ordinary ttf file into the JSON format that FontLoader reads.</p>
+
+    <aside class="callout callout--weetje">
+        <span class="callout-label">Did you know</span>
+        <p>TextGeometry builds letters by extruding the typeface outline - the same principle as pushing a cookie cutter through dough. The depth parameter is literally how deep you push.</p>
+    </aside>
+</section>
+
+<div class="topic-oefeningen">
+    <details>
+        <summary><h2>Exercises</h2></summary>
+        <div class="oefening-niveau" data-niveau="1">
+            <h3>Imitate</h3>
+            <p class="oefening-niveau-beschrijving">Modify existing code - change one value and watch the result.</p>
+            <div class="oefening-kaart">
+                <h4>Your name, extra thick</h4>
+                <p>Put your own name in the example and give the letters depth 1.5. Look at it from the side by setting camera.position.x to 4.</p>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="2">
+            <h3>Vary</h3>
+            <p class="oefening-niveau-beschrijving">Extend an example with your own modifications.</p>
+            <div class="oefening-kaart">
+                <h4>Shadow letters</h4>
+                <p>Combine with the <a href="#schaduwen">Shadows</a> lesson: put the text above a floor, give it castShadow and the floor receiveShadow.</p>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="3">
+            <h3>Create</h3>
+            <p class="oefening-niveau-beschrijving">Build something new with the concepts you have learned.</p>
+            <div class="oefening-kaart">
+                <h4>Kinetic typography</h4>
+                <p>Create a separate TextGeometry per letter (loop over the characters of a word) and make every letter wave with its own phase - the 3D version of the classic p5 text-wave effect.</p>
+                <details class="oefening-hint"><summary>Hint</summary><pre><code>'LAB44'.split('').forEach((letter, i) => {
+  // create a TextGeometry per letter, position.x = i * 1.1
+  // in the loop: position.y = Math.sin(t * 2 + i * 0.6) * 0.3
+});</code></pre></details>
+            </div>
+        </div>
+    </details>
+</div>

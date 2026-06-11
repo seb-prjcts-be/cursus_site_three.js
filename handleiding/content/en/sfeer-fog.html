@@ -1,0 +1,125 @@
+<div class="intro">
+    <p>Atmosphere is what turns a collection of shapes into a world: a background colour that plays along, fog that adds depth, and a floor that anchors the space. Three small interventions, big effect.</p>
+</div>
+
+<div class="kernpunten">
+    <span class="kernpunten-label">What you will learn</span>
+    <ul>
+        <li><code>scene.background</code> can be a colour, but also a texture</li>
+        <li><code>scene.fog</code> makes objects in the distance fade towards a colour</li>
+        <li>The trick: give the fog <strong>the same colour</strong> as the background, and the horizon melts away</li>
+        <li><code>Fog(color, near, far)</code> is linear, <code>FogExp2(color, density)</code> feels more natural</li>
+    </ul>
+</div>
+
+<section>
+    <h2>Fog in one line</h2>
+    <pre><code>scene.background = new THREE.Color(0x141414);
+scene.fog = new THREE.Fog(0x141414, 5, 25);
+//                        colour  from   fully gone</code></pre>
+    <p>From a distance of 5 units everything starts to fade; at 25 units it has fully dissolved into the background colour. Because both colours are identical, you see no hard horizon - only distance.</p>
+    <p>In p5 you built this effect yourself with alpha based on distance; here it is one property of the scene, and it works automatically on every material.</p>
+</section>
+
+<section>
+    <h2>Try it: an endless field</h2>
+    <p>The classic "infinite world" feeling: a field of pillars vanishing into the fog. Try dragging the fog values up or down:</p>
+
+    <div class="three-editor" data-autorun="true">
+        <script type="text/three">
+import * as THREE from 'three';
+
+const scene = new THREE.Scene();
+const moodColor = 0x101018;             // night blue
+scene.background = new THREE.Color(moodColor);
+scene.fog = new THREE.Fog(moodColor, 4, 22);   // same colour: horizon melts away
+
+const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.1, 100);
+camera.position.set(0, 2, 8);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+document.body.appendChild(renderer.domElement);
+
+// Field of pillars, running far into the distance
+const geom = new THREE.BoxGeometry(0.4, 3, 0.4);
+const mat  = new THREE.MeshStandardMaterial({ color: 0xff007d });
+for (let x = -6; x <= 6; x++) {
+  for (let z = -20; z <= 2; z += 2) {
+    if (Math.abs(x) < 1.2) continue;        // keep a path clear in the middle
+    const pillar = new THREE.Mesh(geom, mat);
+    pillar.position.set(x * 1.5, 1.5, z);
+    scene.add(pillar);
+  }
+}
+
+const floor = new THREE.Mesh(
+  new THREE.PlaneGeometry(60, 60),
+  new THREE.MeshStandardMaterial({ color: 0x202028 })
+);
+floor.rotation.x = -Math.PI / 2;
+scene.add(floor);
+
+const moon = new THREE.DirectionalLight(0xaaccff, 2);
+moon.position.set(3, 8, 2);
+scene.add(moon, new THREE.AmbientLight(0x8888ff, 0.3));
+
+const timer = new THREE.Timer();
+renderer.setAnimationLoop(() => {
+  timer.update();
+  // Drift forward slowly: the fog "reveals" the world
+  camera.position.z = 8 - (timer.getElapsed() * 0.6) % 4;
+  renderer.render(scene, camera);
+});
+        </script>
+    </div>
+
+    <aside class="callout callout--tip">
+        <p>The camera keeps sliding 4 units forward and then jumps back - exactly the distance between two rows of pillars. Thanks to the fog you never see the jump: an infinite loop with twenty objects. This is a classic game trick.</p>
+    </aside>
+</section>
+
+<section>
+    <h2>More atmosphere knobs</h2>
+    <ul>
+        <li><strong>FogExp2</strong> - <code>new THREE.FogExp2(color, 0.08)</code>: exponential fog, thicker the further you look. One density knob instead of near/far.</li>
+        <li><strong>Background photo</strong> - <code>scene.background = new THREE.TextureLoader().load('sky.jpg')</code>. For real 360° skies, look up "equirectangular skybox" later.</li>
+        <li><strong>Coloured light</strong> - the fastest mood-maker there is: a blue DirectionalLight is night, an orange one is sunset. Combine with an AmbientLight in a contrasting colour.</li>
+    </ul>
+
+    <aside class="callout callout--weetje">
+        <span class="callout-label">Did you know</span>
+        <p>Fog works inside the shader of every standard material and therefore costs almost nothing. It may well be the cheapest "production value" in all of three.js: two lines of code and your scene suddenly has depth and mystery.</p>
+    </aside>
+</section>
+
+<div class="topic-oefeningen">
+    <details>
+        <summary><h2>Exercises</h2></summary>
+        <div class="oefening-niveau" data-niveau="1">
+            <h3>Imitate</h3>
+            <p class="oefening-niveau-beschrijving">Modify existing code - change one value and watch the result.</p>
+            <div class="oefening-kaart">
+                <h4>Day version</h4>
+                <p>Turn the night scene into a misty morning: background and fog at 0xddddee, the light white and softer.</p>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="2">
+            <h3>Vary</h3>
+            <p class="oefening-niveau-beschrijving">Extend an example with your own modifications.</p>
+            <div class="oefening-kaart">
+                <h4>Breathing fog</h4>
+                <p>Make scene.fog.far oscillate between 10 and 30 in the loop with Math.sin. The world breathes.</p>
+                <details class="oefening-hint"><summary>Hint</summary><pre><code>scene.fog.far = 20 + Math.sin(timer.getElapsed()) * 10;</code></pre></details>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="3">
+            <h3>Create</h3>
+            <p class="oefening-niveau-beschrijving">Build something new with the concepts you have learned.</p>
+            <div class="oefening-kaart">
+                <h4>Your own endless world</h4>
+                <p>Use the loop trick from the example for your own infinite journey: a forest, a city, a tunnel. Pick a colour palette for background, fog and light that together form one atmosphere.</p>
+            </div>
+        </div>
+    </details>
+</div>

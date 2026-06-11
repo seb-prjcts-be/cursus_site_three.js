@@ -1,0 +1,131 @@
+<div class="intro">
+    <p>So far you built everything from basic shapes. With the GLTFLoader you load ready-made 3D models - from Blender, from Sketchfab, or from the examples folder of your clone. Including their animations.</p>
+</div>
+
+<div class="kernpunten">
+    <span class="kernpunten-label">What you will learn</span>
+    <ul>
+        <li><strong>glTF</strong> (.glb) is <em>the</em> standard format for 3D on the web - "the jpeg of 3D"</li>
+        <li><code>GLTFLoader</code> is an addon, loading is asynchronous with a callback</li>
+        <li>The loaded model is an ordinary <code>scene</code> branch: scaling, rotating and grouping work as always</li>
+        <li>You play built-in animations with an <code>AnimationMixer</code></li>
+    </ul>
+</div>
+
+<section>
+    <h2>The loading recipe</h2>
+    <pre><code>import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+new GLTFLoader().load('model.glb', (gltf) => {
+  const model = gltf.scene;       // the tree of meshes
+  model.scale.setScalar(0.05);    // models are rarely at "your" scale
+  scene.add(model);
+});</code></pre>
+    <p>The same pattern as with fonts and textures: load, and add in the callback. The gltf object contains more than just the meshes: <code>gltf.animations</code> is a list of built-in animation clips.</p>
+
+    <aside class="callout callout--let-op">
+        <span class="callout-label">Watch out</span>
+        <p>Seeing nothing after loading? The model is almost always too big, too small, or not where you are looking. Start with model.scale.setScalar and try powers of 10 (0.01, 0.1, 1, 10). A GridHelper next to it helps you judge the scale.</p>
+    </aside>
+</section>
+
+<section>
+    <h2>Try it: a flying flamingo</h2>
+    <p>The flamingo comes from your local clone and has a built-in flying animation. The AnimationMixer is the "play button": you feed it the elapsed time every frame:</p>
+
+    <div class="three-editor" data-autorun="true">
+        <script type="text/three">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x101018);
+scene.fog = new THREE.Fog(0x101018, 5, 30);
+
+const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.1, 100);
+camera.position.set(0, 1, 7);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+document.body.appendChild(renderer.domElement);
+
+const sun = new THREE.DirectionalLight(0xffffff, 3);
+sun.position.set(3, 6, 4);
+scene.add(sun, new THREE.AmbientLight(0xaaaaff, 0.6));
+
+let mixer = null;   // the animation player, exists after loading
+
+new GLTFLoader().load(
+  '../three.js/examples/models/gltf/Flamingo.glb',
+  (gltf) => {
+    const bird = gltf.scene;
+    bird.scale.setScalar(0.02);   // the model was made in millimetres
+    scene.add(bird);
+
+    // Play the built-in flying animation
+    mixer = new THREE.AnimationMixer(bird);
+    mixer.clipAction(gltf.animations[0]).play();
+  }
+);
+
+const timer = new THREE.Timer();
+renderer.setAnimationLoop(() => {
+  timer.update();
+
+  if (mixer) {
+    mixer.update(timer.getDelta());  // delta: time since the previous frame
+  }
+
+  renderer.render(scene, camera);
+});
+        </script>
+    </div>
+
+    <aside class="callout callout--tip">
+        <p>The mixer wants getDelta() (time since the previous frame), not getElapsed(). That way the animation plays at the same speed on every screen - the same framerate-independent idea as in <a href="#animatie-tijd">Animation & time</a>.</p>
+    </aside>
+</section>
+
+<section>
+    <h2>Where do you get models?</h2>
+    <ul>
+        <li><strong>Your clone</strong> - <code>three.js/examples/models/gltf/</code> contains dozens of test models: a horse, a duck, a Ferrari.</li>
+        <li><strong>Make your own</strong> - Blender exports straight to .glb (File → Export → glTF). The royal road for your own work.</li>
+        <li><strong>Online</strong> - Sketchfab and Poly Haven have thousands of free models. Check the licence and credit the maker.</li>
+    </ul>
+
+    <aside class="callout callout--weetje">
+        <span class="callout-label">Did you know</span>
+        <p>Some .glb files are extra compressed with "Draco". For those you attach a DRACOLoader to your GLTFLoader - look up the example webgl_loader_gltf in your clone if you run into such a file and the loader throws an error.</p>
+    </aside>
+</section>
+
+<div class="topic-oefeningen">
+    <details>
+        <summary><h2>Exercises</h2></summary>
+        <div class="oefening-niveau" data-niveau="1">
+            <h3>Imitate</h3>
+            <p class="oefening-niveau-beschrijving">Adapt existing code - change one value and see the result.</p>
+            <div class="oefening-kaart">
+                <h4>Horse instead of flamingo</h4>
+                <p>Replace Flamingo.glb with Horse.glb (same folder). That model also has an animation at index 0.</p>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="2">
+            <h3>Vary</h3>
+            <p class="oefening-niveau-beschrijving">Extend an example with your own adjustments.</p>
+            <div class="oefening-kaart">
+                <h4>Flock</h4>
+                <p>Load the flamingo once, but add the model to a Group and give that group a flight path with sin/cos (see the <a href="#camera">camera lesson</a>). Feeling brave? Load it three times for a flock with a phase offset.</p>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="3">
+            <h3>Create</h3>
+            <p class="oefening-niveau-beschrijving">Build something new with the concepts you have learned.</p>
+            <div class="oefening-kaart">
+                <h4>Your own Blender export</h4>
+                <p>Make (or download) your own model, export it as .glb, put it next to your sketch and build a scene around it with light, fog and a camera movement. This is the full pipeline that studios use too.</p>
+            </div>
+        </div>
+    </details>
+</div>

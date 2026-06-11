@@ -1,0 +1,121 @@
+<div class="intro">
+    <p>A texture is an image wrapped around a 3D shape. The TextureLoader is the three.js version of loadImage() - and you stick the result straight onto a material.</p>
+</div>
+
+<div class="kernpunten">
+    <span class="kernpunten-label">What you will learn</span>
+    <ul>
+        <li><code>new THREE.TextureLoader().load(path)</code> loads an image as a texture</li>
+        <li>You attach the texture to the material via the <code>map</code> property</li>
+        <li>Loading is asynchronous, but three.js shows the object right away and fills in the texture as soon as it arrives - no preload() needed</li>
+        <li>Every geometry has built-in <strong>UV coordinates</strong> that determine how the image wraps around the shape</li>
+    </ul>
+</div>
+
+<section>
+    <h2>From loadImage to TextureLoader</h2>
+    <pre><code>// p5
+let img;
+function preload() { img = loadImage('stone.jpg'); }
+
+// three.js
+const texture = new THREE.TextureLoader().load('stone.jpg');
+const material = new THREE.MeshStandardMaterial({ map: texture });</code></pre>
+    <p>No preload hassle: the renderer just keeps drawing and the texture appears as soon as it has loaded. The property is called <code>map</code> because there are many more "maps": <code>roughnessMap</code>, <code>normalMap</code>, <code>bumpMap</code> - all images that control a material property per pixel.</p>
+</section>
+
+<section>
+    <h2>Try it: the UV test grid</h2>
+    <p>This example loads the official UV test grid from your local three.js clone. Each square shows where that part of the image ends up on the shape. Try swapping the geometry: replace the cube with a <code>SphereGeometry(1.5)</code> or <code>TorusKnotGeometry(1, 0.4)</code>.</p>
+
+    <div class="three-editor" data-autorun="true">
+        <script type="text/three">
+import * as THREE from 'three';
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x141414);
+
+const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.1, 100);
+camera.position.z = 5;
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+document.body.appendChild(renderer.domElement);
+
+// Texture from the local three.js clone (p5: loadImage)
+const texture = new THREE.TextureLoader()
+  .load('../three.js/examples/textures/uv_grid_opengl.jpg');
+texture.colorSpace = THREE.SRGBColorSpace;  // keep the colours accurate
+
+const shape = new THREE.Mesh(
+  new THREE.BoxGeometry(2.2, 2.2, 2.2),
+  new THREE.MeshStandardMaterial({ map: texture })
+);
+scene.add(shape);
+
+const sun = new THREE.DirectionalLight(0xffffff, 3);
+sun.position.set(4, 4, 5);
+scene.add(sun, new THREE.AmbientLight(0xffffff, 0.5));
+
+renderer.setAnimationLoop(() => {
+  shape.rotation.x += 0.005;
+  shape.rotation.y += 0.01;
+  renderer.render(scene, camera);
+});
+        </script>
+    </div>
+
+    <aside class="callout callout--tip">
+        <p>The line texture.colorSpace = THREE.SRGBColorSpace should always be there for colour images. Forget it, and everything looks just a bit washed out and wrong - subtle enough to keep you searching for a long time.</p>
+    </aside>
+
+    <aside class="callout callout--weetje">
+        <span class="callout-label">Did you know</span>
+        <p>UV coordinates are called that because x and y were already taken by 3D space. U runs horizontally through the image, V vertically, both from 0 to 1. The test grid with letters and numbers exists precisely so you can see which (U, V) square lands where.</p>
+    </aside>
+</section>
+
+<section>
+    <h2>Your own images</h2>
+    <p>Anything loadImage() could load, TextureLoader can too: photos, your own drawings, even a p5 export. Watch out for two things:</p>
+    <ul>
+        <li>The image has to be reachable via the same server (no file://, and other people's servers often block - the same CORS story as with p5).</li>
+        <li>Dimensions in powers of two (256, 512, 1024) render the most efficiently.</li>
+    </ul>
+    <p>Your local clone has a whole folder to play with: <code>three.js/examples/textures/</code> - from brick to lava rock.</p>
+</section>
+
+<div class="topic-oefeningen">
+    <details>
+        <summary><h2>Exercises</h2></summary>
+        <div class="oefening-niveau" data-niveau="1">
+            <h3>Imitate</h3>
+            <p class="oefening-niveau-beschrijving">Modify existing code - change one value and watch the result.</p>
+            <div class="oefening-kaart">
+                <h4>Crate</h4>
+                <p>Replace the UV grid with ../three.js/examples/textures/crate.gif - the most famous crate on the internet.</p>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="2">
+            <h3>Vary</h3>
+            <p class="oefening-niveau-beschrijving">Extend an example with your own modifications.</p>
+            <div class="oefening-kaart">
+                <h4>Brick wall with relief</h4>
+                <p>Use brick_diffuse.jpg as map and brick_bump.jpg as bumpMap on a PlaneGeometry. Move a PointLight along it and watch the relief appear.</p>
+                <details class="oefening-hint"><summary>Hint</summary><pre><code>const mat = new THREE.MeshStandardMaterial({
+  map: loader.load('../three.js/examples/textures/brick_diffuse.jpg'),
+  bumpMap: loader.load('../three.js/examples/textures/brick_bump.jpg'),
+  bumpScale: 1.5
+});</code></pre></details>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="3">
+            <h3>Create</h3>
+            <p class="oefening-niveau-beschrijving">Build something new with the concepts you have learned.</p>
+            <div class="oefening-kaart">
+                <h4>p5 as a texture factory</h4>
+                <p>Create a generative pattern in p5, export it with saveCanvas() as a png, and wrap it around a three.js sphere or cube. Your two worlds, literally glued together.</p>
+            </div>
+        </div>
+    </details>
+</div>

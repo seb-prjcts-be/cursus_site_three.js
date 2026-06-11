@@ -1,0 +1,151 @@
+<div class="intro">
+    <p>Not everything is a solid object. With Points you draw thousands of floating particles in one go - starry skies, snow, data clouds. This is the three.js territory of your p5 particle systems, but with tens of thousands at once.</p>
+</div>
+
+<div class="kernpunten">
+    <span class="kernpunten-label">What you will learn</span>
+    <ul>
+        <li>A <code>BufferGeometry</code> + list of positions + <code>PointsMaterial</code> = a point cloud</li>
+        <li>Positions live in one flat <code>Float32Array</code>: [x1, y1, z1, x2, y2, z2, ...]</li>
+        <li>One <code>Points</code> object with 10,000 points is much faster than 10,000 meshes</li>
+        <li>The same idea exists for lines: <code>Line</code> and <code>LineSegments</code></li>
+    </ul>
+</div>
+
+<section>
+    <h2>From Particle class to point cloud</h2>
+    <p>In p5 you wrote a Particle class and an array with a hundred instances. From a few thousand particles onwards, that got slow. three.js takes a different approach: all positions go to the graphics card in one package:</p>
+    <pre><code>const count = 5000;
+const positions = new Float32Array(count * 3);  // x, y, z per point
+
+for (let i = 0; i < count; i++) {
+  positions[i * 3]     = (Math.random() - 0.5) * 20;  // x
+  positions[i * 3 + 1] = (Math.random() - 0.5) * 20;  // y
+  positions[i * 3 + 2] = (Math.random() - 0.5) * 20;  // z
+}
+
+const geom = new THREE.BufferGeometry();
+geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+const cloud = new THREE.Points(geom, new THREE.PointsMaterial({
+  color: 0xff007d,
+  size: 0.05
+}));
+scene.add(cloud);</code></pre>
+
+    <aside class="callout callout--weetje">
+        <span class="callout-label">Did you know</span>
+        <p>Every geometry you have used so far - BoxGeometry, SphereGeometry - is also just a BufferGeometry with such a position list, plus triangle information. So here you are looking under the bonnet of everything you already know.</p>
+    </aside>
+</section>
+
+<section>
+    <h2>Try it: a breathing star sphere</h2>
+    <p>Five thousand points on a sphere surface, gently pulsing. The whole cloud rotates as one object - because it is one object:</p>
+
+    <div class="three-editor" data-autorun="true">
+        <script type="text/three">
+import * as THREE from 'three';
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0a0a12);
+
+const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.1, 100);
+camera.position.z = 7;
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+document.body.appendChild(renderer.domElement);
+
+// 5000 points, spread over a sphere surface
+const count = 5000;
+const positions = new Float32Array(count * 3);
+for (let i = 0; i < count; i++) {
+  // Random point on a sphere (evenly distributed)
+  const u = Math.random() * Math.PI * 2;
+  const v = Math.acos(2 * Math.random() - 1);
+  const r = 2.5;
+  positions[i * 3]     = r * Math.sin(v) * Math.cos(u);
+  positions[i * 3 + 1] = r * Math.sin(v) * Math.sin(u);
+  positions[i * 3 + 2] = r * Math.cos(v);
+}
+
+const geom = new THREE.BufferGeometry();
+geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+const cloud = new THREE.Points(geom, new THREE.PointsMaterial({
+  color: 0xff007d,
+  size: 0.04
+}));
+scene.add(cloud);
+
+// Points need no light: PointsMaterial is "basic"
+
+const timer = new THREE.Timer();
+renderer.setAnimationLoop(() => {
+  timer.update();
+  const t = timer.getElapsed();
+
+  cloud.rotation.y = t * 0.15;
+  const breath = 1 + Math.sin(t * 1.5) * 0.08;
+  cloud.scale.setScalar(breath);       // the whole cloud breathes
+
+  renderer.render(scene, camera);
+});
+        </script>
+    </div>
+
+    <aside class="callout callout--tip">
+        <p>Try setting the count to 50000 - still smooth. Now try that with 50,000 circle() calls in p5. This is why you reach for three.js for large particle systems.</p>
+    </aside>
+</section>
+
+<section>
+    <h2>Moving points individually</h2>
+    <p>If you want to move each point separately (like your particles in p5), you change the values in the position array and set one flag:</p>
+    <pre><code>const pos = geom.attributes.position;
+for (let i = 0; i < pos.count; i++) {
+  pos.setY(i, pos.getY(i) + Math.sin(t + i) * 0.002);
+}
+pos.needsUpdate = true;   // tell the graphics card!</code></pre>
+
+    <aside class="callout callout--let-op">
+        <span class="callout-label">Watch out</span>
+        <p>Forget needsUpdate = true and nothing moves - the graphics card still has the old copy. This is THE classic BufferGeometry pitfall, so memorise it now.</p>
+    </aside>
+
+    <p>Lines work identically: same geometry, different material and object - <code>new THREE.Line(geom, new THREE.LineBasicMaterial({color: 0xffffff}))</code> connects the points in order. Use it to draw trajectories, graphs and wire sculptures.</p>
+</section>
+
+<div class="topic-oefeningen">
+    <details>
+        <summary><h2>Exercises</h2></summary>
+        <div class="oefening-niveau" data-niveau="1">
+            <h3>Imitate</h3>
+            <p class="oefening-niveau-beschrijving">Modify existing code - change one value and watch the result.</p>
+            <div class="oefening-kaart">
+                <h4>Snow colour</h4>
+                <p>Make the points white, smaller (size 0.02) and double the count. A different world, three numbers.</p>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="2">
+            <h3>Vary</h3>
+            <p class="oefening-niveau-beschrijving">Extend an example with your own modifications.</p>
+            <div class="oefening-kaart">
+                <h4>Cube cloud</h4>
+                <p>Spread the points over a cube instead of a sphere (just three Math.random calls, as in the first code block) and make the cloud rotate around two axes.</p>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="3">
+            <h3>Create</h3>
+            <p class="oefening-niveau-beschrijving">Build something new with the concepts you have learned.</p>
+            <div class="oefening-kaart">
+                <h4>Falling snow</h4>
+                <p>Make every point move downwards via the position array (with needsUpdate). Point below the floor? Teleport it back to the top. Combine with fog from the previous lesson for a snowstorm.</p>
+                <details class="oefening-hint"><summary>Hint</summary><pre><code>let y = pos.getY(i) - 0.02;
+if (y < -5) y = 5;
+pos.setY(i, y);</code></pre></details>
+            </div>
+        </div>
+    </details>
+</div>

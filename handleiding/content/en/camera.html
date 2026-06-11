@@ -1,0 +1,135 @@
+<div class="intro">
+    <p>The camera determines what you see and how it feels: a wide angle makes everything dramatic, a telephoto lens flattens everything out. And because the camera is an ordinary object, you can animate it like everything else.</p>
+</div>
+
+<div class="kernpunten">
+    <span class="kernpunten-label">What you will learn</span>
+    <ul>
+        <li>The <code>fov</code> (field of view) is the viewing angle in degrees: small = telephoto, large = wide angle</li>
+        <li><code>camera.lookAt(x, y, z)</code> points the camera at a point - essential after moving it</li>
+        <li><code>OrthographicCamera</code> has <em>no</em> perspective: handy for isometric and graphic looks</li>
+        <li>The camera is an Object3D: <code>position</code>, animation and even groups just work on it</li>
+    </ul>
+</div>
+
+<section>
+    <h2>The four numbers of PerspectiveCamera</h2>
+    <pre><code>new THREE.PerspectiveCamera(
+  75,                        // fov: viewing angle in degrees
+  innerWidth / innerHeight,  // aspect: aspect ratio
+  0.1,                       // near: anything closer is not drawn
+  1000                       // far: anything further away is not drawn
+);</code></pre>
+    <ul>
+        <li><strong>fov</strong> - 45-60 is neutral, 75+ becomes an action game, 20 feels like binoculars. Comparable to perspective() in p5, but as a property.</li>
+        <li><strong>near and far</strong> - the visible range. Objects outside that range disappear. Don't set far absurdly high "just to be safe": that costs precision and causes flickering surfaces.</li>
+    </ul>
+
+    <aside class="callout callout--let-op">
+        <span class="callout-label">Watch out</span>
+        <p>If you change fov, near or far after creating the camera, you have to call camera.updateProjectionMatrix() - the same rule as with window resize. Position and lookAt don't need that.</p>
+    </aside>
+</section>
+
+<section>
+    <h2>Try it: a camera on rails</h2>
+    <p>Here the camera circles around the scene while it keeps looking at the centre. The classic "presentation shot", built entirely with the sin() and cos() you know from p5:</p>
+
+    <div class="three-editor" data-autorun="true">
+        <script type="text/three">
+import * as THREE from 'three';
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x141414);
+
+const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.1, 100);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+document.body.appendChild(renderer.domElement);
+
+// A little town of cubes to fly around
+const mat = new THREE.MeshStandardMaterial({ color: 0xff007d });
+for (let i = 0; i < 25; i++) {
+  const h = 0.5 + (i * 7919 % 23) / 8;   // pseudo-random height
+  const tower = new THREE.Mesh(new THREE.BoxGeometry(0.6, h, 0.6), mat);
+  tower.position.set((i % 5 - 2) * 1.4, h / 2, (Math.floor(i / 5) - 2) * 1.4);
+  scene.add(tower);
+}
+scene.add(new THREE.GridHelper(10, 10, 0x444444, 0x2a2a2a));
+
+const sun = new THREE.DirectionalLight(0xffffff, 3);
+sun.position.set(5, 8, 3);
+scene.add(sun, new THREE.AmbientLight(0xffffff, 0.3));
+
+const timer = new THREE.Timer();
+renderer.setAnimationLoop(() => {
+  timer.update();
+  const t = timer.getElapsed() * 0.4;
+
+  // Camera on a circle, height waves along
+  camera.position.set(Math.cos(t) * 8, 3 + Math.sin(t * 0.7) * 1.5, Math.sin(t) * 8);
+  camera.lookAt(0, 1, 0);   // keep looking at the little town
+
+  renderer.render(scene, camera);
+});
+        </script>
+    </div>
+
+    <aside class="callout callout--tip">
+        <p>Try changing the 50 in the PerspectiveCamera to 20 and then to 100, and click Run. Same scene, completely different feel. The fov is one of the most powerful mood knobs there is.</p>
+    </aside>
+</section>
+
+<section>
+    <h2>OrthographicCamera: without perspective</h2>
+    <p>An orthographic camera draws parallel lines as genuinely parallel: far away is just as big as close by. That gives you the isometric look of city-building games and technical drawings - and it's the 3D equivalent of ortho() in p5:</p>
+    <pre><code>const d = 5;   // how "wide" you look
+const aspect = innerWidth / innerHeight;
+const camera = new THREE.OrthographicCamera(
+  -d * aspect, d * aspect,   // left, right
+   d, -d,                    // top, bottom
+   0.1, 100                  // near, far
+);
+camera.position.set(5, 5, 5);
+camera.lookAt(0, 0, 0);</code></pre>
+
+    <aside class="callout callout--weetje">
+        <span class="callout-label">Did you know</span>
+        <p>With an orthographic camera, zooming in by moving the camera has no effect - everything stays the same size. You zoom by changing the viewing width (the d above) or camera.zoom, followed by updateProjectionMatrix().</p>
+    </aside>
+</section>
+
+<div class="topic-oefeningen">
+    <details>
+        <summary><h2>Exercises</h2></summary>
+        <div class="oefening-niveau" data-niveau="1">
+            <h3>Imitate</h3>
+            <p class="oefening-niveau-beschrijving">Adapt existing code - change one value and see what happens.</p>
+            <div class="oefening-kaart">
+                <h4>Rotate more slowly</h4>
+                <p>Make the camera movement in the example half as fast, and let it circle at twice the distance.</p>
+                <details class="oefening-hint"><summary>Hint</summary><pre><code>const t = timer.getElapsed() * 0.2;  // was 0.4
+... Math.cos(t) * 16 ...             // was 8</code></pre></details>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="2">
+            <h3>Vary</h3>
+            <p class="oefening-niveau-beschrijving">Extend an example with your own modifications.</p>
+            <div class="oefening-kaart">
+                <h4>Dolly zoom light</h4>
+                <p>Make the fov slowly wave between 30 and 80 with Math.sin(t). Don't forget updateProjectionMatrix() in the loop.</p>
+                <details class="oefening-hint"><summary>Hint</summary><pre><code>camera.fov = 55 + Math.sin(t) * 25;
+camera.updateProjectionMatrix();</code></pre></details>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="3">
+            <h3>Create</h3>
+            <p class="oefening-niveau-beschrijving">Build something new with the concepts you have learned.</p>
+            <div class="oefening-kaart">
+                <h4>Rollercoaster camera</h4>
+                <p>Make your own scene and let the camera follow a path you design yourself (combine sin/cos at different speeds for x, y and z). Have it look at an object that moves as well.</p>
+            </div>
+        </div>
+    </details>
+</div>

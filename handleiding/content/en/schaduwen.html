@@ -1,0 +1,145 @@
+<div class="intro">
+    <p>Shadows are the difference between shapes that float and a scene that feels real. They are off by default because they cost computing power - you switch them on in three places: the renderer, the light, and the objects.</p>
+</div>
+
+<div class="kernpunten">
+    <span class="kernpunten-label">What you will learn</span>
+    <ul>
+        <li>Step 1: <code>renderer.shadowMap.enabled = true</code> - the main switch</li>
+        <li>Step 2: <code>light.castShadow = true</code> - only Directional-, Point- and SpotLight can do it</li>
+        <li>Step 3: per object <code>castShadow</code> (casts a shadow) and/or <code>receiveShadow</code> (catches shadows)</li>
+        <li>Blocky edges? Increase the resolution with <code>light.shadow.mapSize</code></li>
+    </ul>
+</div>
+
+<section>
+    <h2>The three switches</h2>
+    <p>three.js lets you choose per component, because every shadow costs performance. The complete recipe:</p>
+    <pre><code>// 1. Renderer: main switch
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;  // softer edges
+
+// 2. Light: this light casts shadows
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);  // higher resolution = crisper edge
+
+// 3. Objects: who casts, who catches
+cube.castShadow = true;       // the cube casts a shadow
+floor.receiveShadow = true;   // the floor catches them</code></pre>
+    <p>An object can also do both: a sphere on a table casts a shadow onto the table and catches the shadow of a lamp above it.</p>
+
+    <aside class="callout callout--let-op">
+        <span class="callout-label">Watch out</span>
+        <p>AmbientLight cannot cast shadows - by definition it comes from everywhere. If you see no shadow, go through the three switches in order; nine times out of ten exactly one of them is missing.</p>
+    </aside>
+</section>
+
+<section>
+    <h2>Try it: bouncing ball with a shadow</h2>
+
+    <div class="three-editor" data-autorun="true">
+        <script type="text/three">
+import * as THREE from 'three';
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xf5f5f5);
+
+const camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 100);
+camera.position.set(4, 3, 6);
+camera.lookAt(0, 1, 0);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true;                 // switch 1
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.appendChild(renderer.domElement);
+
+// Floor that catches shadows
+const floor = new THREE.Mesh(
+  new THREE.PlaneGeometry(20, 20),
+  new THREE.MeshStandardMaterial({ color: 0xffffff })
+);
+floor.rotation.x = -Math.PI / 2;   // lay it flat
+floor.receiveShadow = true;        // switch 3b
+scene.add(floor);
+
+// Ball that casts a shadow
+const ball = new THREE.Mesh(
+  new THREE.SphereGeometry(0.7),
+  new THREE.MeshStandardMaterial({ color: 0xff007d })
+);
+ball.castShadow = true;            // switch 3a
+scene.add(ball);
+
+// Sun with shadow
+const sun = new THREE.DirectionalLight(0xffffff, 3);
+sun.position.set(4, 6, 3);
+sun.castShadow = true;             // switch 2
+sun.shadow.mapSize.set(2048, 2048);
+scene.add(sun, new THREE.AmbientLight(0xffffff, 0.4));
+
+const timer = new THREE.Timer();
+renderer.setAnimationLoop(() => {
+  timer.update();
+  const t = timer.getElapsed();
+
+  // Bouncing: absolute value of sin = always above the floor
+  ball.position.y = 0.7 + Math.abs(Math.sin(t * 3)) * 2;
+  ball.position.x = Math.sin(t * 0.7) * 2;
+
+  renderer.render(scene, camera);
+});
+        </script>
+    </div>
+
+    <aside class="callout callout--tip">
+        <p>Watch how the shadow gets sharper as the ball approaches the floor and softer as it rises - PCFSoftShadowMap does that for you. Try disabling that line and compare.</p>
+    </aside>
+</section>
+
+<section>
+    <h2>If the shadow looks weird</h2>
+    <ul>
+        <li><strong>Blocky edge</strong> - increase <code>shadow.mapSize</code> to 2048 or 4096 (costs memory).</li>
+        <li><strong>Shadow cut off</strong> - with DirectionalLight the shadow area is a box around the origin. Large scene? Enlarge <code>sun.shadow.camera.left/right/top/bottom</code>.</li>
+        <li><strong>Stripes on surfaces</strong> ("shadow acne") - play with <code>sun.shadow.bias</code>, for example -0.0005.</li>
+    </ul>
+
+    <aside class="callout callout--weetje">
+        <span class="callout-label">Did you know</span>
+        <p>Under the bonnet, three.js renders the scene an extra time from the light's point of view, into an invisible depth texture (the shadow map). That is why shadows cost performance: every shadow-casting light is an extra render per frame. p5 does not have this mechanism - this is typically the point where three.js shows its added value.</p>
+    </aside>
+</section>
+
+<div class="topic-oefeningen">
+    <details>
+        <summary><h2>Exercises</h2></summary>
+        <div class="oefening-niveau" data-niveau="1">
+            <h3>Imitate</h3>
+            <p class="oefening-niveau-beschrijving">Modify existing code - change one value and watch the result.</p>
+            <div class="oefening-kaart">
+                <h4>Low sun</h4>
+                <p>Put the sun in the example at position (8, 1.5, 3) and see what happens to the shadow. Evening light!</p>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="2">
+            <h3>Vary</h3>
+            <p class="oefening-niveau-beschrijving">Extend an example with your own modifications.</p>
+            <div class="oefening-kaart">
+                <h4>More casters</h4>
+                <p>Add two cubes that also have castShadow, at different heights. Give one of them receiveShadow as well and let the ball bounce over it.</p>
+                <details class="oefening-hint"><summary>Hint</summary><pre><code>const k = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), mat);
+k.castShadow = true;
+k.receiveShadow = true;</code></pre></details>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="3">
+            <h3>Create</h3>
+            <p class="oefening-niveau-beschrijving">Build something new with the concepts you have learned.</p>
+            <div class="oefening-kaart">
+                <h4>Sundial</h4>
+                <p>Build a scene with one tall object and let the sun (DirectionalLight) move in an arc over the scene using sin/cos. The shadow becomes your pointer.</p>
+            </div>
+        </div>
+    </details>
+</div>

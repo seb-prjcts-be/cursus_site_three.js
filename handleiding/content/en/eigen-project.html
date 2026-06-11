@@ -1,0 +1,159 @@
+<div class="intro">
+    <p>The live editors are great for learning, but real work happens in a file of your own. This page gives you the complete starter code and explains how to set up a three.js project on your own computer.</p>
+</div>
+
+<div class="kernpunten">
+    <span class="kernpunten-label">What you will learn</span>
+    <ul>
+        <li>One <code>index.html</code> with an <strong>importmap</strong> is enough - no npm, no build tools</li>
+        <li>The importmap tells the browser where <code>import 'three'</code> should come from</li>
+        <li>You need a local server (file:// does not work with modules)</li>
+        <li>The starter code below contains the full ritual, including resize and OrbitControls</li>
+    </ul>
+</div>
+
+<section>
+    <h2>The starter code</h2>
+    <p>Copy this as <code>index.html</code> into a folder of your own. This is the boilerplate that combines everything from the course - an empty canvas, ready to build on:</p>
+    <pre><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+  &lt;meta charset="utf-8"&gt;
+  &lt;title&gt;My three.js sketch&lt;/title&gt;
+  &lt;style&gt; body { margin: 0; overflow: hidden; } &lt;/style&gt;
+  &lt;script type="importmap"&gt;
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.184.0/examples/jsm/"
+    }
+  }
+  &lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;script type="module"&gt;
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// --- the ritual ---
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x141414);
+
+const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.1, 1000);
+camera.position.set(3, 2, 5);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+document.body.appendChild(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+
+// --- light ---
+const sun = new THREE.DirectionalLight(0xffffff, 3);
+sun.position.set(5, 5, 5);
+scene.add(sun, new THREE.AmbientLight(0xffffff, 0.3));
+
+// --- your scene starts here ---
+const cube = new THREE.Mesh(
+  new THREE.BoxGeometry(1, 1, 1),
+  new THREE.MeshStandardMaterial({ color: 0xff007d })
+);
+scene.add(cube);
+
+// --- resize ---
+addEventListener('resize', () =&gt; {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+// --- the loop ---
+const timer = new THREE.Timer();
+renderer.setAnimationLoop(() =&gt; {
+  timer.update();
+  const t = timer.getElapsed();
+
+  cube.rotation.y = t;
+
+  controls.update();
+  renderer.render(scene, camera);
+});
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+
+    <aside class="callout callout--tip">
+        <p>Working on the school computers or at home next to this course? Then replace the two CDN addresses with the local clone: "../three.js/build/three.module.js" and "../three.js/examples/jsm/" - your sketch will then work without internet too.</p>
+    </aside>
+</section>
+
+<section>
+    <h2>Starting a server</h2>
+    <p>ES modules do not load from file:// - the same limitation as loadImage() in p5. Three ways, pick what suits your setup:</p>
+    <ol class="stappen">
+        <li>
+            <div>
+                <h3>VS Code: Live Server</h3>
+                <p>Install the "Live Server" extension, right-click your index.html and choose "Open with Live Server". Reloads automatically on every change - the closest to the p5 editor feeling.</p>
+            </div>
+        </li>
+        <li>
+            <div>
+                <h3>Python (often already on your computer)</h3>
+                <p>Open a terminal in your project folder and type <code>python -m http.server</code>. Browse to <code>http://localhost:8000</code>.</p>
+            </div>
+        </li>
+        <li>
+            <div>
+                <h3>A folder under an existing server</h3>
+                <p>Already running Apache or XAMPP (like on the Lab44 machines)? Put your project folder in htdocs and browse to localhost/yourfolder/.</p>
+            </div>
+        </li>
+    </ol>
+</section>
+
+<section>
+    <h2>Versions: why that @0.184.0 in the importmap?</h2>
+    <p>three.js changes every month. Pinning a version number means your sketch will still work exactly the same a year from now. Leave it out and you get "the latest" - and an update can break your sketch while you changed nothing.</p>
+
+    <aside class="callout callout--let-op">
+        <span class="callout-label">Watch out</span>
+        <p>Older tutorials on the internet load three.js with a plain script tag without an importmap, or use THREE as a global variable without an import. That is the outdated way - if you recognise it, know that you first translate such code to the module pattern of this course.</p>
+    </aside>
+
+    <aside class="callout callout--weetje">
+        <span class="callout-label">Did you know</span>
+        <p>For bigger projects developers switch to npm and a bundler (Vite is the most popular). That gives faster reload times and tidy imports, but changes nothing about the three.js code itself. Everything from this course moves over one-to-one.</p>
+    </aside>
+</section>
+
+<div class="topic-oefeningen">
+    <details>
+        <summary><h2>Exercises</h2></summary>
+        <div class="oefening-niveau" data-niveau="1">
+            <h3>Imitate</h3>
+            <p class="oefening-niveau-beschrijving">Adapt existing code - change one value and see the result.</p>
+            <div class="oefening-kaart">
+                <h4>Boilerplate up and running</h4>
+                <p>Set up the starter code locally, start a server, and check that you see the cube spinning and can look around with the mouse.</p>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="2">
+            <h3>Vary</h3>
+            <p class="oefening-niveau-beschrijving">Extend an example with your own adjustments.</p>
+            <div class="oefening-kaart">
+                <h4>Moving a sketch over</h4>
+                <p>Pick your favourite editor example from this course and move it into your own project. Add fog and shadows - in the space of your own file there is room for that now.</p>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="3">
+            <h3>Create</h3>
+            <p class="oefening-niveau-beschrijving">Build something new with the concepts you have learned.</p>
+            <div class="oefening-kaart">
+                <h4>Final assignment: a world</h4>
+                <p>Build your own scene that combines at least: an atmosphere (fog + colour palette), three kinds of objects of which one is a loaded model or 3D text, shadows, a camera or object animation driven by time, and one interaction (OrbitControls or Raycaster). Present it fullscreen.</p>
+            </div>
+        </div>
+    </details>
+</div>

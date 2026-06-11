@@ -1,0 +1,130 @@
+<div class="intro">
+    <p>With OrbitControls you use the mouse to orbit around your scene - the same feel as orbitControl() in p5. And because three.js does nothing automatically, you'll also learn here how to make your scene scale along with the window.</p>
+</div>
+
+<div class="kernpunten">
+    <span class="kernpunten-label">What you will learn</span>
+    <ul>
+        <li><code>OrbitControls</code> is an <strong>addon</strong>: you import it from <code>three/addons/</code></li>
+        <li>Drag = rotate, scroll = zoom, right-drag = pan</li>
+        <li><code>enableDamping</code> gives a smooth coasting effect, but requires <code>controls.update()</code> in the loop</li>
+        <li>On window resize you update <code>camera.aspect</code> and <code>renderer.setSize()</code> yourself</li>
+    </ul>
+</div>
+
+<section>
+    <h2>Addons: the second import</h2>
+    <p>The core of three.js keeps itself small. A lot of the good stuff lives in the addons folder: OrbitControls, model loaders, effects. You recognise them by the second import line:</p>
+    <pre><code>import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// after creating the camera and renderer:
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;   // smooth coasting
+
+renderer.setAnimationLoop(() => {
+  controls.update();             // needed for damping
+  renderer.render(scene, camera);
+});</code></pre>
+</section>
+
+<section>
+    <h2>Try it: drag, scroll, pan</h2>
+
+    <div class="three-editor" data-autorun="true">
+        <script type="text/three">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x141414);
+
+const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.1, 100);
+camera.position.set(4, 3, 6);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+document.body.appendChild(renderer.domElement);
+
+// The object to look at
+const knot = new THREE.Mesh(
+  new THREE.TorusKnotGeometry(1.2, 0.4, 128, 32),
+  new THREE.MeshStandardMaterial({ color: 0xff007d, roughness: 0.3 })
+);
+scene.add(knot);
+
+// A grid as the floor: gives a sense of space while rotating
+scene.add(new THREE.GridHelper(10, 10, 0x666666, 0x333333));
+
+const sun = new THREE.DirectionalLight(0xffffff, 3);
+sun.position.set(5, 8, 5);
+scene.add(sun, new THREE.AmbientLight(0xffffff, 0.3));
+
+// p5: orbitControl() - here an object with options
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+
+renderer.setAnimationLoop(() => {
+  controls.update();
+  renderer.render(scene, camera);
+});
+        </script>
+    </div>
+
+    <aside class="callout callout--tip">
+        <p>Handy options to try in the editor: controls.autoRotate = true (the camera rotates by itself, great for presentations), controls.minDistance and maxDistance (limit the zooming), and controls.enablePan = false (switch off panning).</p>
+    </aside>
+</section>
+
+<section>
+    <h2>Scaling along with the window</h2>
+    <p>p5 had windowResized() and resizeCanvas(). In three.js you write that reflex yourself - three lines that belong in every fullscreen sketch:</p>
+    <pre><code>addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();           // make the camera recalculate
+  renderer.setSize(innerWidth, innerHeight);
+});</code></pre>
+
+    <aside class="callout callout--let-op">
+        <span class="callout-label">Watch out</span>
+        <p>If you forget camera.updateProjectionMatrix(), the image stays stretched after resizing. The camera remembers its settings until you explicitly say: recalculate. This is the most forgotten line in three.js.</p>
+    </aside>
+
+    <aside class="callout callout--weetje">
+        <span class="callout-label">Did you know</span>
+        <p>GridHelper from the example is one of many helpers: AxesHelper shows the x, y and z axes as red, green and blue lines, and is worth its weight in gold when you no longer know which way is "forward". You'll find more helpers in the lesson <a href="#performance-debug">Debugging & speed</a>.</p>
+    </aside>
+</section>
+
+<div class="topic-oefeningen">
+    <details>
+        <summary><h2>Exercises</h2></summary>
+        <div class="oefening-niveau" data-niveau="1">
+            <h3>Imitate</h3>
+            <p class="oefening-niveau-beschrijving">Adapt existing code - change one value and see what happens.</p>
+            <div class="oefening-kaart">
+                <h4>Rotate by itself</h4>
+                <p>Set controls.autoRotate = true and play with controls.autoRotateSpeed. Drag while it rotates: you always win from the auto-rotation.</p>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="2">
+            <h3>Vary</h3>
+            <p class="oefening-niveau-beschrijving">Extend an example with your own modifications.</p>
+            <div class="oefening-kaart">
+                <h4>A constrained camera</h4>
+                <p>Make sure the viewer can't dive below the floor and can't zoom out infinitely far: combine maxPolarAngle, minDistance and maxDistance.</p>
+                <details class="oefening-hint"><summary>Hint</summary><pre><code>controls.maxPolarAngle = Math.PI / 2.1;  // just above the floor
+controls.minDistance = 3;
+controls.maxDistance = 15;</code></pre></details>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="3">
+            <h3>Create</h3>
+            <p class="oefening-niveau-beschrijving">Build something new with the concepts you have learned.</p>
+            <div class="oefening-kaart">
+                <h4>Mini museum</h4>
+                <p>Place three or four sculptures (from earlier exercises) on pedestals in a single scene, with a floor and good lighting. Configure the OrbitControls so visitors can look around freely but can never "fall out of the museum".</p>
+            </div>
+        </div>
+    </details>
+</div>

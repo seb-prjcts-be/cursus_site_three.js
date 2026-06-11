@@ -1,0 +1,165 @@
+<div class="intro">
+    <p>Shaders are small programs that run directly on the graphics card: one for the shape (vertex shader), one for the colour of each pixel (fragment shader). If you know shaders from p5, this is familiar territory in a new outfit.</p>
+</div>
+
+<div class="kernpunten">
+    <span class="kernpunten-label">What you will learn</span>
+    <ul>
+        <li><code>ShaderMaterial</code> is a material whose GLSL code you write yourself</li>
+        <li><strong>Uniforms</strong> are variables you pass in from JavaScript (time, mouse, colour)</li>
+        <li>three.js gives you <code>position</code>, <code>normal</code> and <code>uv</code> for free in the vertex shader</li>
+        <li>Same GLSL language as p5 shaders, but without the setUniform fuss: uniforms are an object</li>
+    </ul>
+</div>
+
+<section>
+    <h2>The smallest shader</h2>
+    <p>A ShaderMaterial has two pieces of GLSL and a uniforms object. This is the minimum that shows something:</p>
+    <pre><code>const material = new THREE.ShaderMaterial({
+  uniforms: {
+    uTime: { value: 0 }          // to be updated from JS
+  },
+  vertexShader: `
+    varying vec2 vUv;
+    void main() {
+      vUv = uv;                  // pass uv on to the fragment shader
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  `,
+  fragmentShader: `
+    uniform float uTime;
+    varying vec2 vUv;
+    void main() {
+      gl_FragColor = vec4(vUv, abs(sin(uTime)), 1.0);
+    }
+  `
+});</code></pre>
+    <p>In p5, loadShader() did this work and you passed uniforms with setUniform. Here the uniforms object is the bridge: <code>material.uniforms.uTime.value = t</code> in your loop, done.</p>
+    <p>The line with <code>projectionMatrix * modelViewMatrix</code> is the standard line that projects 3D points onto the screen - you copy it literally like this into almost every vertex shader.</p>
+</section>
+
+<section>
+    <h2>Try it: a waving flag of code</h2>
+    <p>The vertex shader deforms the plane (the wave), the fragment shader colours it based on uv and time. All the wave maths you know from p5.waves and sin experiments works here per vertex:</p>
+
+    <div class="three-editor" data-autorun="true">
+        <script type="text/three">
+import * as THREE from 'three';
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x141414);
+
+const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.1, 100);
+camera.position.set(0, 1.5, 5);
+camera.lookAt(0, 0, 0);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+document.body.appendChild(renderer.domElement);
+
+// Lots of segments: the vertex shader needs points to bend
+const geom = new THREE.PlaneGeometry(4, 2.5, 64, 40);
+
+const material = new THREE.ShaderMaterial({
+  uniforms: {
+    uTime: { value: 0 }
+  },
+  vertexShader: `
+    uniform float uTime;
+    varying vec2 vUv;
+    varying float vWave;
+    void main() {
+      vUv = uv;
+      vec3 p = position;
+      // Two waves on top of each other - p5.waves thinking in GLSL
+      float wave = sin(p.x * 2.5 + uTime * 2.0) * 0.25
+                 + sin(p.y * 4.0 + uTime * 1.3) * 0.1;
+      p.z += wave;
+      vWave = wave;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
+    }
+  `,
+  fragmentShader: `
+    uniform float uTime;
+    varying vec2 vUv;
+    varying float vWave;
+    void main() {
+      // A pink accent that waves along, on a dark base
+      vec3 pink = vec3(1.0, 0.0, 0.49);
+      vec3 dark = vec3(0.08, 0.08, 0.1);
+      float blend = smoothstep(-0.2, 0.35, vWave + sin(vUv.x * 6.0 + uTime) * 0.1);
+      gl_FragColor = vec4(mix(dark, pink, blend), 1.0);
+    }
+  `,
+  side: THREE.DoubleSide   // draw the back side too
+});
+
+const flag = new THREE.Mesh(geom, material);
+flag.rotation.x = -0.4;
+scene.add(flag);
+
+const timer = new THREE.Timer();
+renderer.setAnimationLoop(() => {
+  timer.update();
+  material.uniforms.uTime.value = timer.getElapsed();  // the bridge JS → GPU
+  renderer.render(scene, camera);
+});
+        </script>
+    </div>
+
+    <aside class="callout callout--tip">
+        <p>Start by playing in the fragment shader: replace the pink vec3 with a colour of your own, or multiply uTime by 10. Fragment mistakes are safe and the effect is immediately visible. You bend vertex shaders after that.</p>
+    </aside>
+
+    <aside class="callout callout--let-op">
+        <span class="callout-label">Watch out</span>
+        <p>GLSL is strict: 1 is an int and 1.0 a float, and you cannot just mix them. The error message appears in your browser console. Nine out of ten shader bugs are a forgotten .0.</p>
+    </aside>
+</section>
+
+<section>
+    <h2>When do you reach for a shader?</h2>
+    <ul>
+        <li>Effects that have to happen <em>per pixel</em> or <em>per vertex</em>: waves, gradients, deformations, dissolves.</li>
+        <li>When thousands of objects need the same effect - the GPU does it in one go.</li>
+        <li>Not for things a standard material can already do: always start with MeshStandardMaterial and only escalate to a shader when you really have to.</li>
+    </ul>
+
+    <aside class="callout callout--weetje">
+        <span class="callout-label">Did you know</span>
+        <p>Every built-in three.js material <em>is</em> a shader - MeshStandardMaterial is thousands of lines of generated GLSL. So with ShaderMaterial you are not writing an "extra", you are taking the pen from the library itself. The newest three.js versions also have TSL (Three Shading Language) to write shaders in JavaScript for WebGPU - comparable to p5.strands in p5 2.x.</p>
+    </aside>
+</section>
+
+<div class="topic-oefeningen">
+    <details>
+        <summary><h2>Exercises</h2></summary>
+        <div class="oefening-niveau" data-niveau="1">
+            <h3>Imitate</h3>
+            <p class="oefening-niveau-beschrijving">Adapt existing code - change one value and see the result.</p>
+            <div class="oefening-kaart">
+                <h4>Wilder water</h4>
+                <p>Double both wave amplitudes (0.25 and 0.1) and make the time factor 4.0. Storm at sea.</p>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="2">
+            <h3>Vary</h3>
+            <p class="oefening-niveau-beschrijving">Extend an example with your own adjustments.</p>
+            <div class="oefening-kaart">
+                <h4>Mouse as uniform</h4>
+                <p>Add a uniform uMouse (Vector2), fill it from a pointermove listener, and make the wave height depend on the distance to the mouse.</p>
+                <details class="oefening-hint"><summary>Hint</summary><pre><code>uniforms: { uTime: {value: 0}, uMouse: {value: new THREE.Vector2()} }
+// JS: material.uniforms.uMouse.value.set(mx, my);
+// GLSL: float dist = distance(vUv, uMouse);</code></pre></details>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="3">
+            <h3>Create</h3>
+            <p class="oefening-niveau-beschrijving">Build something new with the concepts you have learned.</p>
+            <div class="oefening-kaart">
+                <h4>Shader on a sphere</h4>
+                <p>Put your ShaderMaterial on a SphereGeometry and deform along the normal: p += normal * wave. You get a pulsing planet - colour it based on the deformation.</p>
+            </div>
+        </div>
+    </details>
+</div>

@@ -1,0 +1,65 @@
+<div class="intro">
+    <p>You have the foundations: scene, mesh, light, motion and interaction. From here on you learn fastest by dissecting examples - and you have hundreds of them sitting locally.</p>
+</div>
+
+<div class="kernpunten">
+    <span class="kernpunten-label">What you will learn</span>
+    <ul>
+        <li>The local clone at <code>localhost/three/three.js/</code> contains the complete official site: manual and examples</li>
+        <li>Reading tip: open an example you like and read the source code - everything you learned here comes back in it</li>
+        <li>Logical next steps: shadows, loading 3D models (GLTF), and shaders</li>
+    </ul>
+</div>
+
+<section>
+    <h2>Your local treasure chamber</h2>
+    <p>The manual you are in right now lives next to a complete copy of the three.js repository. That copy is not just the library - it is also documentation and inspiration:</p>
+    <ul>
+        <li><a href="../three.js/examples/" target="_blank" rel="noopener">Local examples</a> - hundreds of demos. The file names tell you what they show: webgl_shadowmap, webgl_loader_gltf, ...</li>
+        <li><a href="../three.js/manual/" target="_blank" rel="noopener">Local manual</a> - the official manual, chapter by chapter.</li>
+    </ul>
+
+    <aside class="callout callout--tip">
+        <p>A workflow that works well: find something in the examples that resembles what you want to make, copy it to a folder of your own, and take it apart until you understand which line does what. Taking apart is learning.</p>
+    </aside>
+</section>
+
+<section>
+    <h2>Online resources</h2>
+    <ul>
+        <li><a href="https://threejs.org/manual/" target="_blank" rel="noopener">threejs.org/manual</a> - the same manual, always up to date</li>
+        <li><a href="https://threejs.org/docs/" target="_blank" rel="noopener">threejs.org/docs</a> - the reference per class, like the p5 reference</li>
+        <li><a href="https://threejs.org/examples/" target="_blank" rel="noopener">threejs.org/examples</a> - the examples, searchable</li>
+        <li><a href="https://discourse.threejs.org/" target="_blank" rel="noopener">discourse.threejs.org</a> - the official forum, friendly to beginners</li>
+    </ul>
+</section>
+
+<section>
+    <h2>Where to next?</h2>
+    <p>You have already seen shadows, models and shaders in this course. These are the logical next hills:</p>
+    <ol class="stappen">
+        <li>
+            <div>
+                <h3>Post-processing</h3>
+                <p>Effects over your whole image: bloom (glow), depth of field, grain. Look for the examples starting with webgl_postprocessing in your clone - the EffectComposer is the keyword.</p>
+            </div>
+        </li>
+        <li>
+            <div>
+                <h3>Physics</h3>
+                <p>Real gravity, collisions and bouncing connect to three.js through a physics library such as Rapier or Cannon. three.js draws, the physics engine calculates - you connect the positions every frame.</p>
+            </div>
+        </li>
+        <li>
+            <div>
+                <h3>WebXR</h3>
+                <p>The same scene in virtual or augmented reality. Because you already use setAnimationLoop, you are closer than you think: look for the webxr examples in your clone.</p>
+            </div>
+        </li>
+    </ol>
+
+    <aside class="callout callout--weetje">
+        <span class="callout-label">Did you know</span>
+        <p>three.js is building a WebGPU renderer, the successor to WebGL - the same move p5.js 2.x is making. The concepts from this manual (scene, camera, mesh, light) stay exactly the same; only the engine underneath gets faster.</p>
+    </aside>
+</section>

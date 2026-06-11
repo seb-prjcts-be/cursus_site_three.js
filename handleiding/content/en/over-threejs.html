@@ -1,0 +1,54 @@
+<div class="intro">
+    <p>three.js is the best-known JavaScript library for 3D in the browser. Where p5.js was made for sketching quickly, three.js was made for building worlds.</p>
+</div>
+
+<div class="kernpunten">
+    <span class="kernpunten-label">What you will learn</span>
+    <ul>
+        <li>three.js was started in 2010 by Ricardo Cabello, known online as <strong>mrdoob</strong></li>
+        <li>It builds on top of <strong>WebGL</strong>, the same technology as p5.js in WEBGL mode</li>
+        <li>p5.js = quick sketching, three.js = fully-fledged 3D worlds with materials, light and cameras</li>
+        <li>You write three.js as an <strong>ES module</strong>: with <code>import</code>, not with one big global API</li>
+    </ul>
+</div>
+
+<section>
+    <h2>What is three.js?</h2>
+    <p>three.js is an open source library that makes 3D graphics in the browser achievable. Programming WebGL directly takes hundreds of lines of code for a single triangle. three.js hides that work behind understandable building blocks: a scene, a camera, shapes, materials and light.</p>
+    <p>You will find three.js everywhere: in data visualisations, product configurators, music videos, games and digital art. Many award-winning websites run on three.js.</p>
+
+    <aside class="callout callout--weetje">
+        <span class="callout-label">Did you know</span>
+        <p>Ricardo Cabello started three.js in 2010, initially in ActionScript for Flash. The name comes from "3D" - three dimensions. The library is still updated every month, with releases that carry r-numbers (r150, r160, ...) instead of regular version numbers.</p>
+    </aside>
+</section>
+
+<section>
+    <h2>When p5.js, when three.js?</h2>
+    <p>Both libraries can do 3D. The difference lies in what they were made for:</p>
+    <ul>
+        <li><strong>p5.js</strong> - sketching an idea quickly, generative art, 2D, teaching, prototypes. 3D is possible with WEBGL mode, but stays limited.</li>
+        <li><strong>three.js</strong> - serious 3D: realistic materials, shadows, loading 3D models, large scenes with hundreds of objects, VR.</li>
+    </ul>
+    <p>Rule of thumb: if your idea starts with <em>drawing</em>, pick p5. If it starts with <em>a world or object in 3D</em>, pick three.js.</p>
+
+    <aside class="callout callout--tip">
+        <p>You don't have to choose forever. The thinking patterns you learned in p5 - a setup, an animation loop, transformations, sin() and cos() for movement - you simply reuse in three.js.</p>
+    </aside>
+</section>
+
+<section>
+    <h2>What does three.js code look like?</h2>
+    <p>Unlike p5, three.js has no magic functions like <code>setup()</code> and <code>draw()</code> that exist automatically. You import the library as a module and build everything up yourself:</p>
+    <pre><code>import * as THREE from 'three';
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 1000);
+const renderer = new THREE.WebGLRenderer();</code></pre>
+    <p>That feels more formal than p5 at first. The payoff: you understand exactly which parts exist, because you made them yourself. In <a href="#eerste-scene">Your first scene</a> you build up this ritual step by step.</p>
+
+    <aside class="callout callout--let-op">
+        <span class="callout-label">Watch out</span>
+        <p>Because three.js is an ES module, your sketch won't work if you open the HTML file straight from your disk (file://). You need a local server - just like p5 with loadImage(). On this site that's already taken care of: the live editors below just work.</p>
+    </aside>
+</section>

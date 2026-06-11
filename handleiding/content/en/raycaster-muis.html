@@ -1,0 +1,149 @@
+<div class="intro">
+    <p>In p5 you asked "is the mouse inside this circle?" with a bit of distance maths. In 3D that's trickier: the mouse lives on a flat screen, your objects in depth. The Raycaster solves that: it shoots a ray from the camera through the mouse, and tells you which object it hits.</p>
+</div>
+
+<div class="kernpunten">
+    <span class="kernpunten-label">What you will learn</span>
+    <ul>
+        <li>You convert mouse coordinates to the range -1 to +1 (normalised)</li>
+        <li><code>raycaster.setFromCamera(mouse, camera)</code> aims the ray</li>
+        <li><code>intersectObjects(...)</code> returns the objects that were hit, closest first</li>
+        <li>This is called <strong>picking</strong> - the 3D answer to "is mouseX inside my shape?"</li>
+    </ul>
+</div>
+
+<section>
+    <h2>The pattern</h2>
+    <p>Three fixed steps, which come back almost literally in every interactive scene:</p>
+    <pre><code>const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+
+addEventListener('pointermove', (event) => {
+  // 1. Convert the mouse to -1..+1 (bottom-left to top-right)
+  mouse.x =  (event.clientX / innerWidth)  * 2 - 1;
+  mouse.y = -(event.clientY / innerHeight) * 2 + 1;
+});
+
+renderer.setAnimationLoop(() => {
+  // 2. Aim the ray from the camera through the mouse
+  raycaster.setFromCamera(mouse, camera);
+
+  // 3. Ask what it hits
+  const hits = raycaster.intersectObjects(scene.children);
+  if (hits.length > 0) {
+    hits[0].object.material.color.set(0xff007d);
+  }
+
+  renderer.render(scene, camera);
+});</code></pre>
+</section>
+
+<section>
+    <h2>Try it: move over the cubes</h2>
+
+    <div class="three-editor" data-autorun="true">
+        <script type="text/three">
+import * as THREE from 'three';
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xf5f5f5);
+
+const camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 100);
+camera.position.set(0, 3, 9);
+camera.lookAt(0, 0, 0);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+document.body.appendChild(renderer.domElement);
+
+// Grid of cubes - each with its OWN material,
+// otherwise they would all change colour at once
+const cubes = [];
+for (let x = -2; x <= 2; x++) {
+  for (let y = -1; y <= 1; y++) {
+    const k = new THREE.Mesh(
+      new THREE.BoxGeometry(1, 1, 1),
+      new THREE.MeshStandardMaterial({ color: 0xffffff })
+    );
+    k.position.set(x * 1.4, y * 1.4, 0);
+    scene.add(k);
+    cubes.push(k);
+  }
+}
+
+const sun = new THREE.DirectionalLight(0xffffff, 3);
+sun.position.set(3, 5, 6);
+scene.add(sun, new THREE.AmbientLight(0xffffff, 0.4));
+
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2(-2, -2);   // start off-screen
+
+addEventListener('pointermove', (event) => {
+  mouse.x =  (event.clientX / innerWidth)  * 2 - 1;
+  mouse.y = -(event.clientY / innerHeight) * 2 + 1;
+});
+
+renderer.setAnimationLoop(() => {
+  // Everything back to white
+  cubes.forEach(k => k.material.color.set(0xffffff));
+
+  // What does the ray hit?
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObjects(cubes);
+  if (hits.length > 0) {
+    hits[0].object.material.color.set(0xff007d);
+    hits[0].object.rotation.y += 0.05;
+  }
+
+  renderer.render(scene, camera);
+});
+        </script>
+    </div>
+
+    <aside class="callout callout--tip">
+        <p>hits[0] is always the closest object - after all, the ray can pierce several cubes one behind the other. Want to click instead of hover? Use a pointerdown listener and do the raycast in there.</p>
+    </aside>
+
+    <aside class="callout callout--let-op">
+        <span class="callout-label">Watch out</span>
+        <p>In this example every cube gets its own material, while on the <a href="#animatie-tijd">Animation & time</a> page you learned to share materials. That is deliberate: shared material = shared colour. If you want to colour one object individually, it needs its own material.</p>
+    </aside>
+</section>
+
+<div class="topic-oefeningen">
+    <details>
+        <summary><h2>Exercises</h2></summary>
+        <div class="oefening-niveau" data-niveau="1">
+            <h3>Imitate</h3>
+            <p class="oefening-niveau-beschrijving">Adapt existing code - change one value and see what happens.</p>
+            <div class="oefening-kaart">
+                <h4>Bouncy hover</h4>
+                <p>Make the hit cube grow instead of rotate: scale.setScalar(1.4) on hit, and in the reset line set everything back to 1.</p>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="2">
+            <h3>Vary</h3>
+            <p class="oefening-niveau-beschrijving">Extend an example with your own modifications.</p>
+            <div class="oefening-kaart">
+                <h4>Click instead of hover</h4>
+                <p>Make cubes stay pink once you click them (pointerdown), and white again on a second click. Store the state per cube in userData.</p>
+                <details class="oefening-hint"><summary>Hint</summary><pre><code>addEventListener('pointerdown', () => {
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObjects(cubes);
+  if (hits.length > 0) {
+    const k = hits[0].object;
+    k.userData.on = !k.userData.on;
+  }
+});</code></pre></details>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="3">
+            <h3>Create</h3>
+            <p class="oefening-niveau-beschrijving">Build something new with the concepts you have learned.</p>
+            <div class="oefening-kaart">
+                <h4>Whack-a-mole in 3D</h4>
+                <p>Make one random cube light up at a time; if you click it in time, you score a point and another one lights up. Keep track of the score in an HTML element above the canvas.</p>
+            </div>
+        </div>
+    </details>
+</div>

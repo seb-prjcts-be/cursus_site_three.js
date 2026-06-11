@@ -1,0 +1,98 @@
+<div class="intro">
+    <p>Everything you learned in p5.js also exists in three.js - it just has a different name and works slightly differently. This page is your dictionary.</p>
+</div>
+
+<div class="kernpunten">
+    <span class="kernpunten-label">What you will learn</span>
+    <ul>
+        <li>p5 is <strong>immediate mode</strong>: every frame you draw everything again</li>
+        <li>three.js is <strong>retained mode</strong>: objects exist permanently in a <strong>scene graph</strong></li>
+        <li>In the animation loop you don't draw anything - you <em>change properties</em> of existing objects</li>
+        <li>The translation table below links every p5 concept to its three.js equivalent</li>
+    </ul>
+</div>
+
+<section>
+    <h2>The big difference: drawing versus existing</h2>
+    <p>In p5, <code>background()</code> wipes the canvas and you then draw everything again. A circle only exists at the moment <code>circle()</code> is executed:</p>
+    <pre><code>// p5: the circle only "exists" during this command
+function draw() {
+  background(240);
+  circle(x, y, 60);
+}</code></pre>
+    <p>In three.js you create objects once. They keep existing in the scene, and in the loop you only change their properties:</p>
+    <pre><code>// three.js: the sphere EXISTS, every frame you move it
+const sphere = new THREE.Mesh(geometry, material);
+scene.add(sphere);
+
+renderer.setAnimationLoop(() => {
+  sphere.position.x += 0.01;      // change a property
+  renderer.render(scene, camera); // draw the tree
+});</code></pre>
+
+    <aside class="callout callout--tip">
+        <p>Do you know classes in p5? Then you already know this thinking pattern. A class Ball with properties x and y that you update in draw() - that is exactly how every three.js object works. three.js has that pattern built in.</p>
+    </aside>
+</section>
+
+<section>
+    <h2>The translation table</h2>
+    <table>
+        <thead>
+            <tr><th>p5.js (WEBGL)</th><th>three.js</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><code>createCanvas(w, h, WEBGL)</code></td><td><code>new THREE.WebGLRenderer()</code> + <code>setSize()</code></td></tr>
+            <tr><td>the invisible "world"</td><td><code>new THREE.Scene()</code></td></tr>
+            <tr><td>implicit camera</td><td><code>new THREE.PerspectiveCamera(...)</code></td></tr>
+            <tr><td><code>draw()</code></td><td><code>renderer.setAnimationLoop(...)</code></td></tr>
+            <tr><td><code>background(20)</code></td><td><code>scene.background = new THREE.Color(0x141414)</code></td></tr>
+            <tr><td><code>box()</code>, <code>sphere()</code></td><td>Geometry + Material + <code>Mesh</code></td></tr>
+            <tr><td><code>fill(255, 0, 125)</code></td><td><code>material.color</code> (hex: <code>0xff007d</code>)</td></tr>
+            <tr><td><code>translate()</code> / <code>rotate()</code></td><td><code>mesh.position</code> / <code>mesh.rotation</code></td></tr>
+            <tr><td><code>push()</code> / <code>pop()</code></td><td><code>new THREE.Group()</code> with children</td></tr>
+            <tr><td><code>lights()</code></td><td><code>DirectionalLight</code>, <code>AmbientLight</code>, ...</td></tr>
+            <tr><td><code>orbitControl()</code></td><td><code>OrbitControls</code> (addon)</td></tr>
+            <tr><td><code>frameCount</code> / <code>millis()</code></td><td><code>THREE.Timer</code> → <code>getElapsed()</code></td></tr>
+            <tr><td><code>windowResized()</code></td><td><code>resize</code> listener, update the camera yourself</td></tr>
+            <tr><td><code>mouseX</code>, <code>mouseY</code></td><td><code>pointermove</code> + <code>Raycaster</code></td></tr>
+            <tr><td><code>loadImage()</code></td><td><code>new THREE.TextureLoader().load(...)</code></td></tr>
+        </tbody>
+    </table>
+</section>
+
+<section>
+    <h2>Pitfalls for p5 hands</h2>
+    <ol class="stappen">
+        <li>
+            <div>
+                <h3>Don't create objects in the loop</h3>
+                <p><code>new THREE.SphereGeometry()</code> in the animation loop is the three.js version of loadImage() in draw(): your memory fills up. Create objects once, then only change their properties.</p>
+            </div>
+        </li>
+        <li>
+            <div>
+                <h3>Y points up</h3>
+                <p>Just like in p5 WEBGL mode, but unlike p5 2D. Positive y is upwards, and (0, 0, 0) lies in the middle of the world.</p>
+            </div>
+        </li>
+        <li>
+            <div>
+                <h3>Colours are hex numbers</h3>
+                <p><code>0xff007d</code> instead of <code>(255, 0, 125)</code>. If you still want to write p5-style, <code>new THREE.Color('rgb(255, 0, 125)')</code> works too.</p>
+            </div>
+        </li>
+        <li>
+            <div>
+                <h3>Angles are always radians</h3>
+                <p>There is no angleMode(DEGREES). Use <code>THREE.MathUtils.degToRad(90)</code> if you want to think in degrees.</p>
+            </div>
+        </li>
+        <li>
+            <div>
+                <h3>Without light everything is black</h3>
+                <p>The standard material responds to light, like p5 shapes after lights(). No light added? Black object. More on this in <a href="#licht">Light</a>.</p>
+            </div>
+        </li>
+    </ol>
+</section>

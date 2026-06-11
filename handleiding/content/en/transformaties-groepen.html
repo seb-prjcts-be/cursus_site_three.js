@@ -1,0 +1,137 @@
+<div class="intro">
+    <p>No translate(), no push() and pop(): in three.js every object carries its own position, rotation and scale. And for hierarchy - things that move along with other things - you use a Group.</p>
+</div>
+
+<div class="kernpunten">
+    <span class="kernpunten-label">What you will learn</span>
+    <ul>
+        <li>Every object has <code>.position</code>, <code>.rotation</code> and <code>.scale</code> - all three with x, y and z</li>
+        <li>There is no matrix stack: transformations are properties, not commands</li>
+        <li>A <code>Group</code> is the new push()/pop(): children move along with their parent</li>
+        <li>The scene itself is the root of that tree - hence the name <strong>scene graph</strong></li>
+    </ul>
+</div>
+
+<section>
+    <h2>Properties instead of commands</h2>
+    <p>Compare how you place and rotate an object in both worlds:</p>
+    <pre><code>// p5: commands that change the drawing state
+push();
+translate(2, 0, 0);
+rotateY(0.8);
+box(1);
+pop();
+
+// three.js: properties of the object itself
+cube.position.x = 2;
+cube.rotation.y = 0.8;</code></pre>
+    <p>Handy shortcuts for writing faster:</p>
+    <pre><code>mesh.position.set(2, 1, 0);   // x, y, z in one go
+mesh.scale.setScalar(2);      // everything twice as big
+mesh.rotation.y += 0.01;      // rotating in the loop</code></pre>
+</section>
+
+<section>
+    <h2>Groups: the new push()/pop()</h2>
+    <p>In p5, push()/pop() isolated transformations. In three.js you build a tree instead: a <code>Group</code> is an invisible container, and everything inside it moves along.</p>
+    <p>Classic example: a planet with a moon. If the group rotates, the moon orbits the planet:</p>
+
+    <div class="three-editor" data-autorun="true">
+        <script type="text/three">
+import * as THREE from 'three';
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x141414);
+
+const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.1, 100);
+camera.position.set(0, 3, 8);
+camera.lookAt(0, 0, 0);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+document.body.appendChild(renderer.domElement);
+
+// The group is the "push()" - everything inside moves along
+const system = new THREE.Group();
+scene.add(system);
+
+const planet = new THREE.Mesh(
+  new THREE.SphereGeometry(1),
+  new THREE.MeshStandardMaterial({ color: 0xff007d })
+);
+system.add(planet);
+
+const moon = new THREE.Mesh(
+  new THREE.SphereGeometry(0.3),
+  new THREE.MeshStandardMaterial({ color: 0xffffff })
+);
+moon.position.x = 2.5;   // distance to the planet, INSIDE the group
+system.add(moon);
+
+const sun = new THREE.DirectionalLight(0xffffff, 3);
+sun.position.set(5, 5, 5);
+scene.add(sun, new THREE.AmbientLight(0xffffff, 0.25));
+
+renderer.setAnimationLoop(() => {
+  system.rotation.y += 0.01;  // rotate the group: the moon orbits
+  moon.rotation.y   += 0.05;  // the moon also spins on its own axis
+  renderer.render(scene, camera);
+});
+        </script>
+    </div>
+
+    <aside class="callout callout--tip">
+        <p>Try this in the editor: add a second moon with a different position.x, or put the whole system inside yet another group that you tilt with system2.rotation.z. Groups within groups - that's how you build a solar system, a robot arm, a bicycle.</p>
+    </aside>
+</section>
+
+<section>
+    <h2>Thinking in the scene graph</h2>
+    <p>The scene is a tree. The scene is the trunk, groups are branches, meshes are leaves. Every position you set is <em>relative to the parent</em>:</p>
+    <pre><code>scene
+└── system (Group)      rotation.y rotates everything
+    ├── planet (Mesh)   at (0, 0, 0) inside the group
+    └── moon (Mesh)     at (2.5, 0, 0) inside the group</code></pre>
+    <p>So the moon is not "at x = 2.5 in the world", but "at x = 2.5 relative to the system". Exactly what nested push()/pop() blocks did, but now you can draw it as a tree and it keeps existing between frames.</p>
+
+    <aside class="callout callout--weetje">
+        <span class="callout-label">Did you know</span>
+        <p>Everything in three.js inherits from the same base class Object3D: meshes, groups, cameras and even lights. That's why you can also put a camera or a lamp inside a group and let it move along - a camera on a rollercoaster is just scene graph work.</p>
+    </aside>
+</section>
+
+<div class="topic-oefeningen">
+    <details>
+        <summary><h2>Exercises</h2></summary>
+        <div class="oefening-niveau" data-niveau="1">
+            <h3>Imitate</h3>
+            <p class="oefening-niveau-beschrijving">Adapt existing code - change one value and look at the result.</p>
+            <div class="oefening-kaart">
+                <h4>Distant moon</h4>
+                <p>Put the moon at distance 4 and let the system rotate twice as fast. What happens to the moon's orbital speed?</p>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="2">
+            <h3>Vary</h3>
+            <p class="oefening-niveau-beschrijving">Extend an example with your own changes.</p>
+            <div class="oefening-kaart">
+                <h4>Moon around the moon</h4>
+                <p>Put the moon itself inside its own Group containing a mini-moon at distance 0.6. Rotate that subgroup in the loop: a moon with its own satellite.</p>
+                <details class="oefening-hint"><summary>Hint</summary><pre><code>const moonGroup = new THREE.Group();
+moonGroup.position.x = 2.5;
+moonGroup.add(moon);            // moon now at (0,0,0) INSIDE the group
+moonGroup.add(miniMoon);        // miniMoon.position.x = 0.6
+system.add(moonGroup);
+// loop: moonGroup.rotation.y += 0.08;</code></pre></details>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="3">
+            <h3>Create</h3>
+            <p class="oefening-niveau-beschrijving">Build something new with the concepts you have learned.</p>
+            <div class="oefening-kaart">
+                <h4>Solar system or robot arm</h4>
+                <p>Choose: a solar system with at least three planets (each with its own speed and its own moons), or a robot arm of three nested segments that each rotate around their own joint. Draw the tree on paper first.</p>
+            </div>
+        </div>
+    </details>
+</div>

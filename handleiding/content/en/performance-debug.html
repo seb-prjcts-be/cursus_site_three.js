@@ -1,0 +1,149 @@
+<div class="intro">
+    <p>How do you see what is going wrong in a world you cannot touch? With helpers that make axes and lights visible, a control panel with sliders, and a few habits that keep your sketch fast.</p>
+</div>
+
+<div class="kernpunten">
+    <span class="kernpunten-label">What you will learn</span>
+    <ul>
+        <li><code>AxesHelper</code> and <code>GridHelper</code>: seeing where x (red), y (green) and z (blue) point</li>
+        <li><strong>lil-gui</strong> gives you a control panel with sliders in five lines - <em>the</em> tweak workflow</li>
+        <li>Speed rule 1: reuse geometries and materials</li>
+        <li>Speed rule 2: thousands of copies of the same shape? <code>InstancedMesh</code></li>
+    </ul>
+</div>
+
+<section>
+    <h2>Helpers: your eyes in 3D space</h2>
+    <pre><code>scene.add(new THREE.AxesHelper(3));      // red = x, green = y, blue = z
+scene.add(new THREE.GridHelper(10, 10)); // 10x10 floor grid
+
+// Where is my light actually pointing?
+scene.add(new THREE.DirectionalLightHelper(sun, 1));</code></pre>
+    <p>Remember the colour order with "xyz = rgb". Helpers cost almost nothing; feel free to leave them in until your sketch is finished, just like you put temporary debug text on the canvas in p5.</p>
+</section>
+
+<section>
+    <h2>lil-gui: sliders in five lines</h2>
+    <p>Stop the "change value, save, reload" cycle: lil-gui ships in your clone as an addon and builds a panel that lets you tune your scene live:</p>
+
+    <div class="three-editor" data-autorun="true">
+        <script type="text/three">
+import * as THREE from 'three';
+import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x141414);
+
+const camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 100);
+camera.position.z = 5;
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+document.body.appendChild(renderer.domElement);
+
+const knot = new THREE.Mesh(
+  new THREE.TorusKnotGeometry(1, 0.35, 128, 32),
+  new THREE.MeshStandardMaterial({ color: 0xff007d, roughness: 0.3 })
+);
+scene.add(knot);
+
+const sun = new THREE.DirectionalLight(0xffffff, 3);
+sun.position.set(3, 4, 5);
+scene.add(sun, new THREE.AmbientLight(0xffffff, 0.3));
+
+// The control panel: settings object + sliders
+const settings = {
+  speed: 1,
+  color: '#ff007d',
+  metal: 0
+};
+
+const gui = new GUI();
+gui.add(settings, 'speed', 0, 5);                  // slider 0..5
+gui.addColor(settings, 'color');                   // colour picker
+gui.add(settings, 'metal', 0, 1).onChange(v => {
+  knot.material.metalness = v;                     // apply directly
+});
+
+const timer = new THREE.Timer();
+renderer.setAnimationLoop(() => {
+  timer.update();
+
+  knot.rotation.y += 0.01 * settings.speed;
+  knot.material.color.set(settings.color);
+
+  renderer.render(scene, camera);
+});
+        </script>
+    </div>
+
+    <aside class="callout callout--tip">
+        <p>The workflow professionals use: build your scene, attach every "magic value" to a gui slider, tweak until it feels right, and write the values you found back into your code. Tweaking with sliders is ten times faster than reloading.</p>
+    </aside>
+</section>
+
+<section>
+    <h2>Staying fast: the three rules</h2>
+    <ol class="stappen">
+        <li>
+            <div>
+                <h3>Create nothing in the loop</h3>
+                <p>No new THREE.something() inside setAnimationLoop. You create geometries, materials and vectors once; in the loop you only change values. Familiar from p5, but here it weighs heavier: creating a geometry is expensive.</p>
+            </div>
+        </li>
+        <li>
+            <div>
+                <h3>Share geometries and materials</h3>
+                <p>Fifty cubes with the same shape and colour = one geometry + one material + fifty meshes. Every unique combination of geometry and material is a separate "draw call" - the fewer, the faster.</p>
+            </div>
+        </li>
+        <li>
+            <div>
+                <h3>Thousands? InstancedMesh</h3>
+                <p>For serious numbers (a forest, confetti, a crowd) there is InstancedMesh: one object that draws thousands of copies in a single draw call, each with its own position and rotation. Look up the example webgl_instancing_dynamic in your clone when you need this.</p>
+            </div>
+        </li>
+    </ol>
+
+    <aside class="callout callout--weetje">
+        <span class="callout-label">Did you know</span>
+        <p>Want to see your framerate like frameRate() in p5? You do not type anything special in your browser console: open the Performance tab, or add the Stats addon (three/addons/libs/stats.module.js) for the classic fps counter in the top left.</p>
+    </aside>
+
+    <aside class="callout callout--let-op">
+        <span class="callout-label">Watch out</span>
+        <p>If you remove objects from a scene, their geometry and material stay in video memory until you call geometry.dispose() and material.dispose() yourself. For a sketch that simply keeps running it does not matter; for an app that switches scenes it does.</p>
+    </aside>
+</section>
+
+<div class="topic-oefeningen">
+    <details>
+        <summary><h2>Exercises</h2></summary>
+        <div class="oefening-niveau" data-niveau="1">
+            <h3>Imitate</h3>
+            <p class="oefening-niveau-beschrijving">Adapt existing code - change one value and see the result.</p>
+            <div class="oefening-kaart">
+                <h4>Extra slider</h4>
+                <p>Add a "scale" slider (0.5 to 2) to the example and apply it with knot.scale.setScalar in the loop.</p>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="2">
+            <h3>Vary</h3>
+            <p class="oefening-niveau-beschrijving">Extend an example with your own adjustments.</p>
+            <div class="oefening-kaart">
+                <h4>Light direction</h4>
+                <p>Attach the position and intensity of the DirectionalLight to gui sliders, and add a DirectionalLightHelper so you can see what you are doing.</p>
+                <details class="oefening-hint"><summary>Hint</summary><pre><code>gui.add(sun.position, 'x', -10, 10);
+gui.add(sun, 'intensity', 0, 10);</code></pre></details>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="3">
+            <h3>Create</h3>
+            <p class="oefening-niveau-beschrijving">Build something new with the concepts you have learned.</p>
+            <div class="oefening-kaart">
+                <h4>Tweak station</h4>
+                <p>Take your best sketch from this course and attach a full gui panel to it: colours, speeds, fog distance, camera fov. Turn it into your own visual instrument.</p>
+            </div>
+        </div>
+    </details>
+</div>

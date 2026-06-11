@@ -1,0 +1,136 @@
+<div class="intro">
+    <p>In p5 a shape is one command: box(100). In three.js every shape consists of two parts: a geometry (the shape) and a material (the appearance). Together they become a mesh.</p>
+</div>
+
+<div class="kernpunten">
+    <span class="kernpunten-label">What you will learn</span>
+    <ul>
+        <li><code>Mesh = Geometry + Material</code> - shape and appearance are separated</li>
+        <li>Geometries: <code>BoxGeometry</code>, <code>SphereGeometry</code>, <code>CylinderGeometry</code>, <code>TorusGeometry</code>, <code>PlaneGeometry</code>, ...</li>
+        <li><code>MeshStandardMaterial</code> responds to light, <code>MeshBasicMaterial</code> doesn't (like a flat fill)</li>
+        <li>You may reuse one geometry or material for many meshes - that's free performance</li>
+    </ul>
+</div>
+
+<section>
+    <h2>Shape + appearance = mesh</h2>
+    <p>The p5 line <code>fill(255, 0, 125); box(100);</code> becomes in three.js:</p>
+    <pre><code>const geometry = new THREE.BoxGeometry(1, 1, 1);  // the shape
+const material = new THREE.MeshStandardMaterial({ color: 0xff007d });  // the appearance
+const mesh = new THREE.Mesh(geometry, material);   // together: a thing in the world
+scene.add(mesh);</code></pre>
+    <p>Why that split? Because you can reuse parts. A hundred spheres with the same shape but different colours: one geometry, a hundred materials. A hundred identical marbles: one geometry, one material, a hundred meshes.</p>
+</section>
+
+<section>
+    <h2>The shape library</h2>
+    <p>The names look a lot like what you know from p5 WEBGL mode:</p>
+    <ul>
+        <li><code>BoxGeometry(w, h, d)</code> - p5: <code>box()</code></li>
+        <li><code>SphereGeometry(radius)</code> - p5: <code>sphere()</code></li>
+        <li><code>CylinderGeometry(radiusTop, radiusBottom, height)</code> - p5: <code>cylinder()</code>, but with two radii: use it to make a cone</li>
+        <li><code>TorusGeometry(radius, tube)</code> - p5: <code>torus()</code></li>
+        <li><code>PlaneGeometry(w, h)</code> - p5: <code>plane()</code></li>
+        <li><code>TorusKnotGeometry(...)</code> - doesn't exist in p5, and is far too beautiful to ignore</li>
+    </ul>
+
+    <div class="three-editor" data-autorun="true">
+        <script type="text/three">
+import * as THREE from 'three';
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xf5f5f5);
+
+const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.1, 100);
+camera.position.z = 7;
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+document.body.appendChild(renderer.domElement);
+
+// One material, three different geometries
+const mat = new THREE.MeshStandardMaterial({ color: 0xff007d });
+
+const ball  = new THREE.Mesh(new THREE.SphereGeometry(1), mat);
+const donut = new THREE.Mesh(new THREE.TorusGeometry(0.9, 0.35), mat);
+const knot  = new THREE.Mesh(new THREE.TorusKnotGeometry(0.7, 0.25), mat);
+
+ball.position.x = -3;   // p5: push(); translate(-3, 0); sphere(); pop();
+knot.position.x =  3;
+
+scene.add(ball, donut, knot);
+
+const sun = new THREE.DirectionalLight(0xffffff, 3);
+sun.position.set(3, 5, 4);
+scene.add(sun, new THREE.AmbientLight(0xffffff, 0.4));
+
+renderer.setAnimationLoop(() => {
+  donut.rotation.x += 0.01;
+  knot.rotation.y += 0.01;
+  renderer.render(scene, camera);
+});
+        </script>
+    </div>
+</section>
+
+<section>
+    <h2>Materials: the new fill()</h2>
+    <p>In p5 you choose a drawing state: fill, stroke, normalMaterial. In three.js you choose a material type per object:</p>
+    <ul>
+        <li><code>MeshBasicMaterial</code> - flat colour, ignores light. Like fill() without lights(). Handy for debugging: this material is never "accidentally black".</li>
+        <li><code>MeshNormalMaterial</code> - rainbow colours based on the direction of each face. Identical to p5's <code>normalMaterial()</code>.</li>
+        <li><code>MeshStandardMaterial</code> - physically realistic, responds to light. With <code>roughness</code> and <code>metalness</code>, each from 0 to 1. This is your default choice.</li>
+    </ul>
+    <pre><code>new THREE.MeshStandardMaterial({
+  color: 0xff007d,
+  roughness: 0.3,   // 0 = mirror smooth, 1 = matte
+  metalness: 0.8    // 0 = plastic, 1 = metal
+});</code></pre>
+
+    <aside class="callout callout--tip">
+        <p>Object black and you don't know why? Temporarily replace the material with MeshNormalMaterial. If you can see the object then, your problem is the light, not the geometry.</p>
+    </aside>
+
+    <aside class="callout callout--weetje">
+        <span class="callout-label">Did you know</span>
+        <p>Under the bonnet, a geometry is simply a list of triangles. SphereGeometry(1, 32, 16) builds a sphere from 32 by 16 segments. Fewer segments = more angular and faster, more = rounder and slower. That's the same as the detail parameters of p5's sphere().</p>
+    </aside>
+</section>
+
+<div class="topic-oefeningen">
+    <details>
+        <summary><h2>Exercises</h2></summary>
+        <div class="oefening-niveau" data-niveau="1">
+            <h3>Imitate</h3>
+            <p class="oefening-niveau-beschrijving">Adapt existing code - change one value and look at the result.</p>
+            <div class="oefening-kaart">
+                <h4>Angular sphere</h4>
+                <p>Give the sphere in the example extra parameters: SphereGeometry(1, 8, 4). Count the corners. Then set it to (1, 64, 32).</p>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="2">
+            <h3>Vary</h3>
+            <p class="oefening-niveau-beschrijving">Extend an example with your own changes.</p>
+            <div class="oefening-kaart">
+                <h4>Material sample card</h4>
+                <p>Make five spheres side by side with the same geometry but each their own MeshStandardMaterial: metalness from 0 to 1 in steps. One loop, five materials.</p>
+                <details class="oefening-hint"><summary>Hint</summary><pre><code>for (let i = 0; i < 5; i++) {
+  const m = new THREE.MeshStandardMaterial({
+    color: 0xff007d, metalness: i / 4, roughness: 0.3
+  });
+  const b = new THREE.Mesh(ballGeom, m);
+  b.position.x = (i - 2) * 2.2;
+  scene.add(b);
+}</code></pre></details>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="3">
+            <h3>Create</h3>
+            <p class="oefening-niveau-beschrijving">Build something new with the concepts you have learned.</p>
+            <div class="oefening-kaart">
+                <h4>Sculpture</h4>
+                <p>Build an abstract sculpture from at least six shapes. Limit yourself to two materials shared between the meshes - force yourself to compose with position, rotation and scale.</p>
+            </div>
+        </div>
+    </details>
+</div>

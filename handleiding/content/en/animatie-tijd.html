@@ -1,0 +1,130 @@
+<div class="intro">
+    <p>Movement works in three.js the same way as in p5: change things a tiny bit every frame. Only you don't use frameCount but a Timer - and it thinks in seconds.</p>
+</div>
+
+<div class="kernpunten">
+    <span class="kernpunten-label">What you will learn</span>
+    <ul>
+        <li><code>renderer.setAnimationLoop(fn)</code> is your draw(): roughly 60 times per second</li>
+        <li><code>THREE.Timer</code> → <code>update()</code> + <code>getElapsed()</code> gives the elapsed time in seconds</li>
+        <li>Time-based animation is framerate-independent: equally fast on every screen</li>
+        <li>Your p5 toolkit keeps working: <code>Math.sin()</code>, <code>Math.cos()</code> and lerp thinking</li>
+    </ul>
+</div>
+
+<section>
+    <h2>From frameCount to Timer</h2>
+    <p>In p5 you often wrote <code>rotateY(frameCount * 0.01)</code>. You can do that here too (<code>mesh.rotation.y += 0.01</code>), but there is a better habit: animate based on time.</p>
+    <pre><code>const timer = new THREE.Timer();
+
+renderer.setAnimationLoop(() => {
+  timer.update();                     // internal update, once per frame
+  const t = timer.getElapsed();       // seconds since the start
+
+  mesh.rotation.y = t;                       // 1 radian per second
+  mesh.position.y = Math.sin(t * 2) * 1.5;   // up and down
+
+  renderer.render(scene, camera);
+});</code></pre>
+    <p>Why is this better? A phone at 30 fps and a gaming monitor at 144 fps now show exactly the same movement. With frame counting, your sketch runs almost five times as fast on the gaming monitor.</p>
+
+    <aside class="callout callout--tip">
+        <p>Rule of thumb for reading this: rotation.y = t means one radian per second, so a full turn takes about 6.3 seconds. Want it twice as fast? rotation.y = t * 2.</p>
+    </aside>
+</section>
+
+<section>
+    <h2>A wave of cubes</h2>
+    <p>The classic p5 pattern "a row of things, each with a phase offset in sin()" works literally the same here. The only difference: the cubes already exist, you only change their y position.</p>
+
+    <div class="three-editor" data-autorun="true">
+        <script type="text/three">
+import * as THREE from 'three';
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xf5f5f5);
+
+const camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 100);
+camera.position.set(0, 4, 12);
+camera.lookAt(0, 0, 0);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+document.body.appendChild(renderer.domElement);
+
+// Create once, store in an array - like an array of objects in p5
+const cubes = [];
+const geom = new THREE.BoxGeometry(0.6, 0.6, 0.6);
+const mat  = new THREE.MeshStandardMaterial({ color: 0xff007d });
+
+for (let i = 0; i < 15; i++) {
+  const k = new THREE.Mesh(geom, mat);
+  k.position.x = (i - 7) * 0.8;
+  scene.add(k);
+  cubes.push(k);
+}
+
+const sun = new THREE.DirectionalLight(0xffffff, 3);
+sun.position.set(3, 6, 4);
+scene.add(sun, new THREE.AmbientLight(0xffffff, 0.4));
+
+const timer = new THREE.Timer();
+renderer.setAnimationLoop(() => {
+  timer.update();
+  const t = timer.getElapsed();
+
+  cubes.forEach((k, i) => {
+    k.position.y = Math.sin(t * 2 + i * 0.5) * 1.5;  // phase per cube
+    k.rotation.x = t + i * 0.2;
+  });
+
+  renderer.render(scene, camera);
+});
+        </script>
+    </div>
+
+    <aside class="callout callout--weetje">
+        <span class="callout-label">Did you know</span>
+        <p>Look at the line with geom and mat: all fifteen cubes share one geometry and one material. three.js draws that much faster than fifteen separate copies - and it's exactly why geometry and material are kept separate.</p>
+    </aside>
+</section>
+
+<section>
+    <h2>Smoothly towards a target: lerp</h2>
+    <p>The p5 pattern <code>x = lerp(x, targetX, 0.1)</code> exists built in on every position:</p>
+    <pre><code>// Every frame 10% closer to the target - smooth easing
+mesh.position.lerp(new THREE.Vector3(2, 1, 0), 0.1);</code></pre>
+    <p>Positions in three.js are <code>Vector3</code> objects, the 3D version of p5.Vector. You already know many of the methods: <code>add()</code>, <code>sub()</code>, <code>normalize()</code>, <code>dist()</code>... your vector knowledge from p5 simply moves along with you.</p>
+</section>
+
+<div class="topic-oefeningen">
+    <details>
+        <summary><h2>Exercises</h2></summary>
+        <div class="oefening-niveau" data-niveau="1">
+            <h3>Imitate</h3>
+            <p class="oefening-niveau-beschrijving">Adapt existing code - change one value and see what happens.</p>
+            <div class="oefening-kaart">
+                <h4>A stronger wave</h4>
+                <p>Make the wave in the example taller (amplitude 3) and the phase offset per cube smaller (0.2). What shape does the wave take?</p>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="2">
+            <h3>Vary</h3>
+            <p class="oefening-niveau-beschrijving">Extend an example with your own modifications.</p>
+            <div class="oefening-kaart">
+                <h4>Rippling carpet</h4>
+                <p>Turn the row into a grid of 10 by 10 cubes (nested loop) and make the y position depend on the distance to the centre: waves rolling outwards.</p>
+                <details class="oefening-hint"><summary>Hint</summary><pre><code>const distance = Math.sqrt(x * x + z * z);
+k.position.y = Math.sin(t * 2 - distance) * 0.8;</code></pre></details>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="3">
+            <h3>Create</h3>
+            <p class="oefening-niveau-beschrijving">Build something new with the concepts you have learned.</p>
+            <div class="oefening-kaart">
+                <h4>Kinetic sculpture</h4>
+                <p>Design a moving artwork that combines at least three layers of movement: something that rotates, something that waves, something that glides smoothly towards changing target positions with lerp() (pick a new target every few seconds).</p>
+            </div>
+        </div>
+    </details>
+</div>

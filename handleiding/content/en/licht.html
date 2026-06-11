@@ -1,0 +1,139 @@
+<div class="intro">
+    <p>In p5, lights() was a single command that switched "everything on". In three.js, lights are objects you place in the scene - and the combination of lights determines the entire mood of your image.</p>
+</div>
+
+<div class="kernpunten">
+    <span class="kernpunten-label">What you will learn</span>
+    <ul>
+        <li><code>AmbientLight</code> - light from everywhere, no shadow side (the "base lighting")</li>
+        <li><code>DirectionalLight</code> - parallel rays like the sun, with a direction</li>
+        <li><code>PointLight</code> - a light bulb: shines in all directions from a single point</li>
+        <li>The classic recipe: one DirectionalLight + one weak AmbientLight</li>
+        <li>Lights are objects: you can move them and even animate them</li>
+    </ul>
+</div>
+
+<section>
+    <h2>The standard recipe</h2>
+    <p>This is the lighting you'll use in nine out of ten sketches:</p>
+    <pre><code>// The "sun": strong, with a clear direction
+const sun = new THREE.DirectionalLight(0xffffff, 3);
+sun.position.set(5, 5, 5);
+scene.add(sun);
+
+// Soft fill so the shadow side isn't pitch black
+scene.add(new THREE.AmbientLight(0xffffff, 0.3));</code></pre>
+    <p>The two arguments are always colour and intensity. With DirectionalLight only the <em>direction</em> of the position matters: the light shines from there towards the origin, with parallel rays. How far away it sits makes no difference.</p>
+</section>
+
+<section>
+    <h2>Play with light</h2>
+    <p>Below, a PointLight circles around a few objects. Watch how the highlights move along with it. Try setting the AmbientLight to intensity 0, or give the PointLight a colour:</p>
+
+    <div class="three-editor" data-autorun="true">
+        <script type="text/three">
+import * as THREE from 'three';
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x141414);
+
+const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.1, 100);
+camera.position.set(0, 2, 7);
+camera.lookAt(0, 0, 0);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+document.body.appendChild(renderer.domElement);
+
+// Three spheres with different roughness
+const colour = 0xff007d;
+for (let i = 0; i < 3; i++) {
+  const sphere = new THREE.Mesh(
+    new THREE.SphereGeometry(0.9),
+    new THREE.MeshStandardMaterial({
+      color: colour,
+      roughness: i * 0.45   // 0 = glossy, 0.9 = matte
+    })
+  );
+  sphere.position.x = (i - 1) * 2.4;
+  scene.add(sphere);
+}
+
+// A circling "light bulb"
+const lamp = new THREE.PointLight(0xffffff, 30);
+scene.add(lamp);
+
+// Small white sphere so you can see the lamp itself
+const lampSphere = new THREE.Mesh(
+  new THREE.SphereGeometry(0.1),
+  new THREE.MeshBasicMaterial({ color: 0xffffff })
+);
+lamp.add(lampSphere);   // child of the lamp: moves along with it
+
+scene.add(new THREE.AmbientLight(0xffffff, 0.15));
+
+const timer = new THREE.Timer();
+renderer.setAnimationLoop(() => {
+  timer.update();
+  const t = timer.getElapsed();
+  lamp.position.set(Math.cos(t) * 3.5, 1.5, Math.sin(t) * 3.5);
+  renderer.render(scene, camera);
+});
+        </script>
+    </div>
+
+    <aside class="callout callout--tip">
+        <p>The sphere with roughness 0 shows a sharp highlight, the matte sphere almost none. Material and light always work together: the same light looks different on every material.</p>
+    </aside>
+</section>
+
+<section>
+    <h2>Which light when?</h2>
+    <ul>
+        <li><strong>Outdoor scene, daylight</strong> - DirectionalLight + weak AmbientLight</li>
+        <li><strong>Indoor scene, lamp or campfire</strong> - PointLight, possibly several</li>
+        <li><strong>Spotlight on a stage</strong> - <code>SpotLight</code>: a cone with a direction and an angle</li>
+        <li><strong>Soft studio look</strong> - <code>HemisphereLight</code>: sky colour from above, ground colour from below</li>
+    </ul>
+
+    <aside class="callout callout--let-op">
+        <span class="callout-label">Watch out</span>
+        <p>More lights = more computation per pixel. Two or three lights is normal; twenty PointLights will make your sketch slow. If you need lots of "points of light", use small MeshBasicMaterial spheres that imitate light - those cost almost nothing.</p>
+    </aside>
+
+    <aside class="callout callout--weetje">
+        <span class="callout-label">Did you know</span>
+        <p>Real shadows (one object casting a shadow onto another) get their own lesson: <a href="#schaduwen">Shadows</a>.</p>
+    </aside>
+</section>
+
+<div class="topic-oefeningen">
+    <details>
+        <summary><h2>Exercises</h2></summary>
+        <div class="oefening-niveau" data-niveau="1">
+            <h3>Imitate</h3>
+            <p class="oefening-niveau-beschrijving">Adapt existing code - change one value and see what happens.</p>
+            <div class="oefening-kaart">
+                <h4>Pink lamp</h4>
+                <p>Give the circling PointLight the colour 0xff007d and set the AmbientLight to intensity 0. White spheres, pink light - what do you see?</p>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="2">
+            <h3>Vary</h3>
+            <p class="oefening-niveau-beschrijving">Extend an example with your own modifications.</p>
+            <div class="oefening-kaart">
+                <h4>Two lamps, two colours</h4>
+                <p>Add a second PointLight in a contrasting colour (for example cyan 0x00ffff) that circles in the opposite direction: use -t instead of t. Watch where the colours mix.</p>
+                <details class="oefening-hint"><summary>Hint</summary><pre><code>lamp2.position.set(Math.cos(-t) * 3.5, 1.5, Math.sin(-t) * 3.5);</code></pre></details>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="3">
+            <h3>Create</h3>
+            <p class="oefening-niveau-beschrijving">Build something new with the concepts you have learned.</p>
+            <div class="oefening-kaart">
+                <h4>Day and night cycle</h4>
+                <p>Build a scene in which a "sun" (DirectionalLight) travels in an arc across the world. Make the colour shift from orange (low) to white (high), and let the background darken along with it. Math.sin is your best friend.</p>
+            </div>
+        </div>
+    </details>
+</div>
