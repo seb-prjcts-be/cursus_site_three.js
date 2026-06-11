@@ -1,0 +1,137 @@
+<div class="intro">
+    <p>Geen translate(), geen push() en pop(): in three.js draagt elk object zijn eigen positie, rotatie en schaal. En voor hiërarchie - dingen die meebewegen met andere dingen - gebruik je een Group.</p>
+</div>
+
+<div class="kernpunten">
+    <span class="kernpunten-label">Kernpunten</span>
+    <ul>
+        <li>Elk object heeft <code>.position</code>, <code>.rotation</code> en <code>.scale</code> - alle drie met x, y en z</li>
+        <li>Er is geen matrix-stack: transformaties zijn eigenschappen, geen commando's</li>
+        <li>Een <code>Group</code> is het nieuwe push()/pop(): kinderen bewegen mee met hun ouder</li>
+        <li>De scene zelf is de wortel van die boom - vandaar de naam <strong>scene graph</strong></li>
+    </ul>
+</div>
+
+<section>
+    <h2>Eigenschappen in plaats van commando's</h2>
+    <p>Vergelijk hoe je in beide werelden een object plaatst en draait:</p>
+    <pre><code>// p5: commando's die de tekenstaat veranderen
+push();
+translate(2, 0, 0);
+rotateY(0.8);
+box(1);
+pop();
+
+// three.js: eigenschappen van het object zelf
+kubus.position.x = 2;
+kubus.rotation.y = 0.8;</code></pre>
+    <p>Handige vormen om sneller te schrijven:</p>
+    <pre><code>mesh.position.set(2, 1, 0);   // x, y, z in één keer
+mesh.scale.setScalar(2);      // alles 2x zo groot
+mesh.rotation.y += 0.01;      // draaien in de loop</code></pre>
+</section>
+
+<section>
+    <h2>Groups: het nieuwe push()/pop()</h2>
+    <p>In p5 isoleerde push()/pop() transformaties. In three.js bouw je in plaats daarvan een boom: een <code>Group</code> is een onzichtbare container, en alles wat erin zit beweegt mee.</p>
+    <p>Klassiek voorbeeld: een planeet met een maan. Draait de groep, dan draait de maan mee rond de planeet:</p>
+
+    <div class="three-editor" data-autorun="true">
+        <script type="text/three">
+import * as THREE from 'three';
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x141414);
+
+const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.1, 100);
+camera.position.set(0, 3, 8);
+camera.lookAt(0, 0, 0);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+document.body.appendChild(renderer.domElement);
+
+// De groep is de "push()" - alles erin beweegt mee
+const stelsel = new THREE.Group();
+scene.add(stelsel);
+
+const planeet = new THREE.Mesh(
+  new THREE.SphereGeometry(1),
+  new THREE.MeshStandardMaterial({ color: 0xff007d })
+);
+stelsel.add(planeet);
+
+const maan = new THREE.Mesh(
+  new THREE.SphereGeometry(0.3),
+  new THREE.MeshStandardMaterial({ color: 0xffffff })
+);
+maan.position.x = 2.5;   // afstand tot de planeet, BINNEN de groep
+stelsel.add(maan);
+
+const zon = new THREE.DirectionalLight(0xffffff, 3);
+zon.position.set(5, 5, 5);
+scene.add(zon, new THREE.AmbientLight(0xffffff, 0.25));
+
+renderer.setAnimationLoop(() => {
+  stelsel.rotation.y += 0.01;  // draai de groep: de maan cirkelt
+  maan.rotation.y    += 0.05;  // de maan draait ook om zichzelf
+  renderer.render(scene, camera);
+});
+        </script>
+    </div>
+
+    <aside class="callout callout--tip">
+        <p>Probeer in de editor: voeg een tweede maan toe met een andere position.x, of stop het hele stelsel in nóg een groep die je laat kantelen met stelsel2.rotation.z. Groepen in groepen - zo bouw je een zonnestelsel, een robotarm, een fiets.</p>
+    </aside>
+</section>
+
+<section>
+    <h2>Denken in de scene graph</h2>
+    <p>De scene is een boom. De scene is de stam, groepen zijn takken, meshes zijn bladeren. Elke positie die je instelt is <em>relatief aan de ouder</em>:</p>
+    <pre><code>scene
+└── stelsel (Group)      rotation.y draait alles
+    ├── planeet (Mesh)   op (0, 0, 0) binnen de groep
+    └── maan (Mesh)      op (2.5, 0, 0) binnen de groep</code></pre>
+    <p>De maan staat dus niet "op x = 2.5 in de wereld", maar "op x = 2.5 ten opzichte van het stelsel". Precies wat geneste push()/pop()-blokken deden, maar nu kan je het tekenen als een boom én blijft het bestaan tussen frames.</p>
+
+    <aside class="callout callout--weetje">
+        <span class="callout-label">Weetje</span>
+        <p>Alles in three.js erft van dezelfde basisklasse Object3D: meshes, groepen, camera's en zelfs lichten. Daarom kan je ook een camera of een lamp in een groep stoppen en laten meebewegen - een camera op een achtbaan is gewoon scene graph-werk.</p>
+    </aside>
+</section>
+
+<div class="topic-oefeningen">
+    <details>
+        <summary><h2>Oefeningen</h2></summary>
+        <div class="oefening-niveau" data-niveau="1">
+            <h3>Nabootsen</h3>
+            <p class="oefening-niveau-beschrijving">Pas bestaande code aan - verander één waarde en bekijk het resultaat.</p>
+            <div class="oefening-kaart">
+                <h4>Verre maan</h4>
+                <p>Zet de maan op afstand 4 en laat het stelsel dubbel zo snel draaien. Wat gebeurt er met de baansnelheid van de maan?</p>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="2">
+            <h3>Variëren</h3>
+            <p class="oefening-niveau-beschrijving">Breid een voorbeeld uit met eigen aanpassingen.</p>
+            <div class="oefening-kaart">
+                <h4>Maan om de maan</h4>
+                <p>Stop de maan zelf in een eigen Group met daarin een mini-maantje op afstand 0.6. Draai die subgroep in de loop: een maan met zijn eigen satelliet.</p>
+                <details class="oefening-hint"><summary>Hint</summary><pre><code>const maanGroep = new THREE.Group();
+maanGroep.position.x = 2.5;
+maanGroep.add(maan);            // maan nu op (0,0,0) IN de groep
+maanGroep.add(miniMaan);        // miniMaan.position.x = 0.6
+stelsel.add(maanGroep);
+// loop: maanGroep.rotation.y += 0.08;</code></pre></details>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="3">
+            <h3>Creëren</h3>
+            <p class="oefening-niveau-beschrijving">Bouw iets nieuws met de concepten die je hebt geleerd.</p>
+            <div class="oefening-kaart">
+                <h4>Zonnestelsel of robotarm</h4>
+                <p>Kies: een zonnestelsel met minstens drie planeten (elk eigen snelheid en eigen manen), of een robotarm van drie geneste segmenten die elk om hun eigen gewricht draaien. Teken eerst de boom op papier.</p>
+            </div>
+        </div>
+    </details>
+</div>

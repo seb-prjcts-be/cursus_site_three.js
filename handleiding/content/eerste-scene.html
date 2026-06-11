@@ -1,0 +1,146 @@
+<div class="intro">
+    <p>Elke three.js-sketch begint met hetzelfde ritueel van vier stappen: scene, camera, renderer, loop. Dit is jouw nieuwe createCanvas-reflex.</p>
+</div>
+
+<div class="kernpunten">
+    <span class="kernpunten-label">Kernpunten</span>
+    <ul>
+        <li>Een <code>Scene</code> is de wereld waar al je objecten in leven</li>
+        <li>Een <code>PerspectiveCamera</code> is het oog - in p5 bestond die stiekem al</li>
+        <li>De <code>WebGLRenderer</code> maakt het canvas, zoals <code>createCanvas()</code></li>
+        <li><code>setAnimationLoop()</code> is je <code>draw()</code>: hij draait zo'n 60 keer per seconde</li>
+        <li>Vergeet je één van de vier? Zwart scherm.</li>
+    </ul>
+</div>
+
+<section>
+    <h2>De vier stappen</h2>
+    <ol class="stappen">
+        <li>
+            <div>
+                <h3>Scene - de wereld</h3>
+                <p>In p5 bestaat de wereld impliciet: alles wat je tekent komt "ergens" terecht. In three.js maak je die wereld expliciet aan en voeg je er objecten aan toe met <code>scene.add(...)</code>.</p>
+            </div>
+        </li>
+        <li>
+            <div>
+                <h3>Camera - het oog</h3>
+                <p>De vier getallen van <code>PerspectiveCamera(75, aspect, 0.1, 1000)</code>: de zichthoek in graden, de beeldverhouding, en de minimale en maximale kijkafstand. Zet de camera iets naar achter (<code>camera.position.z = 5</code>), anders sta je ín je object.</p>
+            </div>
+        </li>
+        <li>
+            <div>
+                <h3>Renderer - het canvas</h3>
+                <p>De renderer maakt een echt <code>&lt;canvas&gt;</code>-element. Anders dan bij p5 moet je het zelf in de pagina hangen met <code>document.body.appendChild(renderer.domElement)</code>.</p>
+            </div>
+        </li>
+        <li>
+            <div>
+                <h3>Loop - de draw()</h3>
+                <p><code>renderer.setAnimationLoop(fn)</code> roept jouw functie elk frame aan. Daarin wijzig je eigenschappen en sluit je af met <code>renderer.render(scene, camera)</code>: teken de wereld door het oog.</p>
+            </div>
+        </li>
+    </ol>
+</section>
+
+<section>
+    <h2>Probeer het zelf</h2>
+    <p>Hieronder staat het volledige ritueel, plus één draaiende kubus. Pas gerust dingen aan: verander de kleur, de rotatiesnelheid, of <code>camera.position.z</code> - en klik op Run.</p>
+
+    <div class="three-editor" data-autorun="true">
+        <script type="text/three">
+import * as THREE from 'three';
+
+// 1. SCENE - de wereld (p5: bestaat impliciet)
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x141414);  // p5: background(20)
+
+// 2. CAMERA - het oog (zichthoek, verhouding, near, far)
+const camera = new THREE.PerspectiveCamera(
+  75, innerWidth / innerHeight, 0.1, 1000
+);
+camera.position.z = 5;
+
+// 3. RENDERER - het canvas (p5: createCanvas)
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+document.body.appendChild(renderer.domElement);
+
+// Eén object: vorm + uiterlijk = mesh
+const kubus = new THREE.Mesh(
+  new THREE.BoxGeometry(2, 2, 2),
+  new THREE.MeshStandardMaterial({ color: 0xff007d })
+);
+scene.add(kubus);
+
+// Licht, anders is de kubus zwart (p5: lights())
+const zon = new THREE.DirectionalLight(0xffffff, 3);
+zon.position.set(5, 5, 5);
+scene.add(zon);
+scene.add(new THREE.AmbientLight(0xffffff, 0.3));
+
+// 4. LOOP - de draw(): eigenschappen wijzigen, dan renderen
+renderer.setAnimationLoop(() => {
+  kubus.rotation.x += 0.01;
+  kubus.rotation.y += 0.015;
+  renderer.render(scene, camera);
+});
+        </script>
+    </div>
+
+    <aside class="callout callout--tip">
+        <p>Zet eens <code>camera.position.z = 2</code> of <code>= 20</code>. Je verplaatst het oog, niet de kubus. Dat onderscheid - camera versus object - is nieuw tegenover p5, waar je meestal de wereld zelf verschoof met translate().</p>
+    </aside>
+</section>
+
+<section>
+    <h2>Wat als het zwart blijft?</h2>
+    <p>De drie klassiekers, in volgorde van waarschijnlijkheid:</p>
+    <ul>
+        <li>Camera niet verplaatst - je staat in het object. Zet <code>camera.position.z = 5</code>.</li>
+        <li>Geen licht toegevoegd terwijl je <code>MeshStandardMaterial</code> gebruikt - het object is er wel, maar zwart op zwart.</li>
+        <li><code>renderer.render(scene, camera)</code> vergeten in de loop - er wordt nooit getekend.</li>
+    </ul>
+
+    <aside class="callout callout--weetje">
+        <span class="callout-label">Weetje</span>
+        <p>setAnimationLoop heeft een verborgen voordeel tegenover zelf requestAnimationFrame aanroepen: het werkt ook in VR (WebXR). Daarom is het de aangeraden manier.</p>
+    </aside>
+</section>
+
+<div class="topic-oefeningen">
+    <details>
+        <summary><h2>Oefeningen</h2></summary>
+        <div class="oefening-niveau" data-niveau="1">
+            <h3>Nabootsen</h3>
+            <p class="oefening-niveau-beschrijving">Pas bestaande code aan - verander één waarde en bekijk het resultaat.</p>
+            <div class="oefening-kaart">
+                <h4>Andere kubus</h4>
+                <p>Geef de kubus in het voorbeeld een andere kleur (zoek een hex-kleur op), maak hem groter, en laat hem trager draaien.</p>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="2">
+            <h3>Variëren</h3>
+            <p class="oefening-niveau-beschrijving">Breid een voorbeeld uit met eigen aanpassingen.</p>
+            <div class="oefening-kaart">
+                <h4>Gezelschap</h4>
+                <p>Voeg een tweede kubus toe op position.x = 3 die de andere kant op draait. Onthoud: één keer aanmaken, in de loop alleen eigenschappen wijzigen.</p>
+                <details class="oefening-hint"><summary>Hint</summary><pre><code>const kubus2 = new THREE.Mesh(
+  new THREE.BoxGeometry(1, 1, 1),
+  new THREE.MeshStandardMaterial({ color: 0xffffff })
+);
+kubus2.position.x = 3;
+scene.add(kubus2);
+// in de loop: kubus2.rotation.y -= 0.02;</code></pre></details>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="3">
+            <h3>Creëren</h3>
+            <p class="oefening-niveau-beschrijving">Bouw iets nieuws met de concepten die je hebt geleerd.</p>
+            <div class="oefening-kaart">
+                <h4>Het ritueel uit het hoofd</h4>
+                <p>Wis alle code in de editor en bouw het volledige ritueel opnieuw zonder spieken: scene, camera, renderer, een vorm naar keuze, licht, loop. Lukt het? Dan zit het fundament erin.</p>
+            </div>
+        </div>
+    </details>
+</div>

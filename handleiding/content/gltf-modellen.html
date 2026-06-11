@@ -1,0 +1,131 @@
+<div class="intro">
+    <p>Tot nu toe bouwde je alles uit basisvormen. Met de GLTFLoader laad je kant-en-klare 3D-modellen - uit Blender, van Sketchfab, of uit de voorbeeldenmap van je clone. Inclusief hun animaties.</p>
+</div>
+
+<div class="kernpunten">
+    <span class="kernpunten-label">Kernpunten</span>
+    <ul>
+        <li><strong>glTF</strong> (.glb) is hét standaardformaat voor 3D op het web - "de jpeg van 3D"</li>
+        <li><code>GLTFLoader</code> is een addon, laden is asynchroon met een callback</li>
+        <li>Het geladen model is een gewone <code>scene</code>-tak: schalen, draaien en groeperen werkt zoals altijd</li>
+        <li>Ingebakken animaties speel je af met een <code>AnimationMixer</code></li>
+    </ul>
+</div>
+
+<section>
+    <h2>Het laadrecept</h2>
+    <pre><code>import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+new GLTFLoader().load('model.glb', (gltf) => {
+  const model = gltf.scene;       // de boom van meshes
+  model.scale.setScalar(0.05);    // modellen zijn zelden op "jouw" schaal
+  scene.add(model);
+});</code></pre>
+    <p>Hetzelfde patroon als bij fonts en texturen: laden, en in de callback toevoegen. Het gltf-object bevat meer dan alleen de meshes: <code>gltf.animations</code> is een lijst ingebakken animatieclips.</p>
+
+    <aside class="callout callout--let-op">
+        <span class="callout-label">Let op</span>
+        <p>Zie je niets na het laden? Het model is bijna altijd te groot, te klein, of staat niet waar je kijkt. Begin met model.scale.setScalar en probeer machten van 10 (0.01, 0.1, 1, 10). Een GridHelper ernaast helpt om de schaal te zien.</p>
+    </aside>
+</section>
+
+<section>
+    <h2>Probeer het: een vliegende flamingo</h2>
+    <p>De flamingo komt uit je lokale clone en heeft een ingebakken vlieg-animatie. De AnimationMixer is de "afspeelknop": je geeft hem elke frame de verstreken tijd:</p>
+
+    <div class="three-editor" data-autorun="true">
+        <script type="text/three">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x101018);
+scene.fog = new THREE.Fog(0x101018, 5, 30);
+
+const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.1, 100);
+camera.position.set(0, 1, 7);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+document.body.appendChild(renderer.domElement);
+
+const zon = new THREE.DirectionalLight(0xffffff, 3);
+zon.position.set(3, 6, 4);
+scene.add(zon, new THREE.AmbientLight(0xaaaaff, 0.6));
+
+let mixer = null;   // de animatie-afspeler, bestaat na het laden
+
+new GLTFLoader().load(
+  '../three.js/examples/models/gltf/Flamingo.glb',
+  (gltf) => {
+    const vogel = gltf.scene;
+    vogel.scale.setScalar(0.02);   // het model is in millimeters gemaakt
+    scene.add(vogel);
+
+    // De ingebakken vlieg-animatie afspelen
+    mixer = new THREE.AnimationMixer(vogel);
+    mixer.clipAction(gltf.animations[0]).play();
+  }
+);
+
+const timer = new THREE.Timer();
+renderer.setAnimationLoop(() => {
+  timer.update();
+
+  if (mixer) {
+    mixer.update(timer.getDelta());  // delta: tijd sinds vorige frame
+  }
+
+  renderer.render(scene, camera);
+});
+        </script>
+    </div>
+
+    <aside class="callout callout--tip">
+        <p>De mixer wil getDelta() (tijd sinds het vorige frame), niet getElapsed(). Zo speelt de animatie op elk scherm even snel - hetzelfde framerate-onafhankelijke idee als bij <a href="#animatie-tijd">Animatie & tijd</a>.</p>
+    </aside>
+</section>
+
+<section>
+    <h2>Waar haal je modellen?</h2>
+    <ul>
+        <li><strong>Je clone</strong> - <code>three.js/examples/models/gltf/</code> bevat tientallen testmodellen: een paard, een eend, een Ferrari.</li>
+        <li><strong>Zelf maken</strong> - Blender exporteert rechtstreeks naar .glb (File → Export → glTF). De koninklijke weg voor eigen werk.</li>
+        <li><strong>Online</strong> - Sketchfab en Poly Haven hebben duizenden gratis modellen. Check de licentie en vermeld de maker.</li>
+    </ul>
+
+    <aside class="callout callout--weetje">
+        <span class="callout-label">Weetje</span>
+        <p>Sommige .glb-bestanden zijn extra gecomprimeerd met "Draco". Daarvoor koppel je een DRACOLoader aan je GLTFLoader - zoek het voorbeeld webgl_loader_gltf in je clone als je zo'n bestand tegenkomt en de lader een foutmelding geeft.</p>
+    </aside>
+</section>
+
+<div class="topic-oefeningen">
+    <details>
+        <summary><h2>Oefeningen</h2></summary>
+        <div class="oefening-niveau" data-niveau="1">
+            <h3>Nabootsen</h3>
+            <p class="oefening-niveau-beschrijving">Pas bestaande code aan - verander één waarde en bekijk het resultaat.</p>
+            <div class="oefening-kaart">
+                <h4>Paard in plaats van flamingo</h4>
+                <p>Vervang Flamingo.glb door Horse.glb (zelfde map). Ook dat model heeft een animatie op index 0.</p>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="2">
+            <h3>Variëren</h3>
+            <p class="oefening-niveau-beschrijving">Breid een voorbeeld uit met eigen aanpassingen.</p>
+            <div class="oefening-kaart">
+                <h4>Zwerm</h4>
+                <p>Laad de flamingo één keer, maar voeg het model toe aan een Group en geef die group een vliegbaan met sin/cos (zie <a href="#camera">camera-les</a>). Durf je meer? Laad hem drie keer voor een zwerm met fase-verschil.</p>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="3">
+            <h3>Creëren</h3>
+            <p class="oefening-niveau-beschrijving">Bouw iets nieuws met de concepten die je hebt geleerd.</p>
+            <div class="oefening-kaart">
+                <h4>Eigen Blender-export</h4>
+                <p>Maak (of download) een eigen model, exporteer het als .glb, zet het naast je sketch en bouw er een scene omheen met licht, fog en een camera-beweging. Dit is de volledige pijplijn die ook studio's gebruiken.</p>
+            </div>
+        </div>
+    </details>
+</div>

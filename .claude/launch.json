@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "three-lessen",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8044"],
+      "port": 8044
+    },
+    {
+      "name": "p5-cursus",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8046", "--directory", "C:/server/htdocs/p5_cursus_site"],
+      "port": 8046
+    }
+  ]
+}

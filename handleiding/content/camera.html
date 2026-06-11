@@ -1,0 +1,135 @@
+<div class="intro">
+    <p>De camera bepaalt wat je ziet en hoe het voelt: een groothoek maakt alles dramatisch, een telelens drukt alles plat. En omdat de camera een gewoon object is, kan je hem animeren zoals al de rest.</p>
+</div>
+
+<div class="kernpunten">
+    <span class="kernpunten-label">Kernpunten</span>
+    <ul>
+        <li>De <code>fov</code> (field of view) is de zichthoek in graden: klein = telelens, groot = groothoek</li>
+        <li><code>camera.lookAt(x, y, z)</code> richt de camera op een punt - onmisbaar na het verplaatsen</li>
+        <li><code>OrthographicCamera</code> heeft géén perspectief: handig voor isometrische en grafische looks</li>
+        <li>De camera is een Object3D: <code>position</code>, animatie en zelfs groepen werken er gewoon op</li>
+    </ul>
+</div>
+
+<section>
+    <h2>De vier getallen van PerspectiveCamera</h2>
+    <pre><code>new THREE.PerspectiveCamera(
+  75,                        // fov: zichthoek in graden
+  innerWidth / innerHeight,  // aspect: beeldverhouding
+  0.1,                       // near: dichterbij wordt niet getekend
+  1000                       // far: verder weg wordt niet getekend
+);</code></pre>
+    <ul>
+        <li><strong>fov</strong> - 45-60 is neutraal, 75+ wordt een actiegame, 20 voelt als een verrekijker. Vergelijkbaar met perspective() in p5, maar dan als eigenschap.</li>
+        <li><strong>near en far</strong> - het zichtbereik. Objecten buiten dat bereik verdwijnen. Zet far niet absurd hoog "voor de zekerheid": dat kost precisie en geeft flikkerende vlakken.</li>
+    </ul>
+
+    <aside class="callout callout--let-op">
+        <span class="callout-label">Let op</span>
+        <p>Wijzig je fov, near of far ná het aanmaken, dan moet je camera.updateProjectionMatrix() aanroepen - dezelfde regel als bij venster-resize. Position en lookAt hebben dat niet nodig.</p>
+    </aside>
+</section>
+
+<section>
+    <h2>Probeer het: een camera op rails</h2>
+    <p>Hier cirkelt de camera om de scene terwijl hij naar het midden blijft kijken. Het klassieke "presentatie-shot", volledig met sin() en cos() die je uit p5 kent:</p>
+
+    <div class="three-editor" data-autorun="true">
+        <script type="text/three">
+import * as THREE from 'three';
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x141414);
+
+const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.1, 100);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+document.body.appendChild(renderer.domElement);
+
+// Een stadje van kubussen om rond te vliegen
+const mat = new THREE.MeshStandardMaterial({ color: 0xff007d });
+for (let i = 0; i < 25; i++) {
+  const h = 0.5 + (i * 7919 % 23) / 8;   // pseudo-willekeurige hoogte
+  const toren = new THREE.Mesh(new THREE.BoxGeometry(0.6, h, 0.6), mat);
+  toren.position.set((i % 5 - 2) * 1.4, h / 2, (Math.floor(i / 5) - 2) * 1.4);
+  scene.add(toren);
+}
+scene.add(new THREE.GridHelper(10, 10, 0x444444, 0x2a2a2a));
+
+const zon = new THREE.DirectionalLight(0xffffff, 3);
+zon.position.set(5, 8, 3);
+scene.add(zon, new THREE.AmbientLight(0xffffff, 0.3));
+
+const timer = new THREE.Timer();
+renderer.setAnimationLoop(() => {
+  timer.update();
+  const t = timer.getElapsed() * 0.4;
+
+  // Camera op een cirkel, hoogte golft mee
+  camera.position.set(Math.cos(t) * 8, 3 + Math.sin(t * 0.7) * 1.5, Math.sin(t) * 8);
+  camera.lookAt(0, 1, 0);   // altijd naar het stadje blijven kijken
+
+  renderer.render(scene, camera);
+});
+        </script>
+    </div>
+
+    <aside class="callout callout--tip">
+        <p>Verander de 50 in de PerspectiveCamera eens in 20 en daarna in 100, en klik Run. Zelfde scene, totaal ander gevoel. De fov is een van de krachtigste sfeerknoppen die er bestaat.</p>
+    </aside>
+</section>
+
+<section>
+    <h2>OrthographicCamera: zonder perspectief</h2>
+    <p>Een orthografische camera tekent evenwijdige lijnen écht evenwijdig: ver weg is even groot als dichtbij. Dat geeft de isometrische look van stadsbouwspelletjes en technische tekeningen - en het is het 3D-equivalent van ortho() in p5:</p>
+    <pre><code>const d = 5;   // hoe "breed" je kijkt
+const aspect = innerWidth / innerHeight;
+const camera = new THREE.OrthographicCamera(
+  -d * aspect, d * aspect,   // links, rechts
+   d, -d,                    // boven, onder
+   0.1, 100                  // near, far
+);
+camera.position.set(5, 5, 5);
+camera.lookAt(0, 0, 0);</code></pre>
+
+    <aside class="callout callout--weetje">
+        <span class="callout-label">Weetje</span>
+        <p>Bij een orthografische camera heeft inzoomen door de camera te verplaatsen geen effect - alles blijft even groot. Zoomen doe je door de kijkbreedte (de d hierboven) of camera.zoom te veranderen, gevolgd door updateProjectionMatrix().</p>
+    </aside>
+</section>
+
+<div class="topic-oefeningen">
+    <details>
+        <summary><h2>Oefeningen</h2></summary>
+        <div class="oefening-niveau" data-niveau="1">
+            <h3>Nabootsen</h3>
+            <p class="oefening-niveau-beschrijving">Pas bestaande code aan - verander één waarde en bekijk het resultaat.</p>
+            <div class="oefening-kaart">
+                <h4>Draai trager</h4>
+                <p>Maak de camerabeweging in het voorbeeld half zo snel, en laat hem op dubbele afstand cirkelen.</p>
+                <details class="oefening-hint"><summary>Hint</summary><pre><code>const t = timer.getElapsed() * 0.2;  // was 0.4
+... Math.cos(t) * 16 ...             // was 8</code></pre></details>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="2">
+            <h3>Variëren</h3>
+            <p class="oefening-niveau-beschrijving">Breid een voorbeeld uit met eigen aanpassingen.</p>
+            <div class="oefening-kaart">
+                <h4>Dolly-zoom light</h4>
+                <p>Laat de fov langzaam golven tussen 30 en 80 met Math.sin(t). Vergeet updateProjectionMatrix() niet in de loop.</p>
+                <details class="oefening-hint"><summary>Hint</summary><pre><code>camera.fov = 55 + Math.sin(t) * 25;
+camera.updateProjectionMatrix();</code></pre></details>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="3">
+            <h3>Creëren</h3>
+            <p class="oefening-niveau-beschrijving">Bouw iets nieuws met de concepten die je hebt geleerd.</p>
+            <div class="oefening-kaart">
+                <h4>Achtbaan-camera</h4>
+                <p>Maak een eigen scene en laat de camera een baan volgen die jij ontwerpt (combineer sin/cos op verschillende snelheden voor x, y en z). Laat hem kijken naar een object dat zelf ook beweegt.</p>
+            </div>
+        </div>
+    </details>
+</div>

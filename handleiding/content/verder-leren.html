@@ -1,0 +1,65 @@
+<div class="intro">
+    <p>Je hebt de fundamenten: scene, mesh, licht, beweging en interactie. Vanaf hier leer je het snelst door voorbeelden te ontleden - en daar heb je er lokaal honderden van staan.</p>
+</div>
+
+<div class="kernpunten">
+    <span class="kernpunten-label">Kernpunten</span>
+    <ul>
+        <li>De lokale clone op <code>localhost/three/three.js/</code> bevat de volledige officiële site: manual én voorbeelden</li>
+        <li>Leestip: open een voorbeeld dat je mooi vindt en lees de broncode - alles wat je hier leerde komt erin terug</li>
+        <li>Logische vervolgstappen: schaduwen, 3D-modellen laden (GLTF), en shaders</li>
+    </ul>
+</div>
+
+<section>
+    <h2>Je lokale schatkamer</h2>
+    <p>De handleiding waar je nu in zit leeft naast een volledige kopie van de three.js-repository. Die kopie is niet alleen de bibliotheek - het is ook documentatie en inspiratie:</p>
+    <ul>
+        <li><a href="../three.js/examples/" target="_blank" rel="noopener">Lokale voorbeelden</a> - honderden demo's. De bestandsnamen zeggen wat ze tonen: webgl_shadowmap, webgl_loader_gltf, ...</li>
+        <li><a href="../three.js/manual/" target="_blank" rel="noopener">Lokale manual</a> - de officiële handleiding, hoofdstuk per hoofdstuk.</li>
+    </ul>
+
+    <aside class="callout callout--tip">
+        <p>Werkwijze die goed werkt: zoek in de voorbeelden iets dat lijkt op wat jij wil maken, kopieer het naar een eigen map, en sloop het tot je begrijpt welke regel wat doet. Slopen is leren.</p>
+    </aside>
+</section>
+
+<section>
+    <h2>Online bronnen</h2>
+    <ul>
+        <li><a href="https://threejs.org/manual/" target="_blank" rel="noopener">threejs.org/manual</a> - dezelfde manual, altijd actueel</li>
+        <li><a href="https://threejs.org/docs/" target="_blank" rel="noopener">threejs.org/docs</a> - de referentie per klasse, zoals de p5 reference</li>
+        <li><a href="https://threejs.org/examples/" target="_blank" rel="noopener">threejs.org/examples</a> - de voorbeelden, doorzoekbaar</li>
+        <li><a href="https://discourse.threejs.org/" target="_blank" rel="noopener">discourse.threejs.org</a> - het officiële forum, vriendelijk voor beginners</li>
+    </ul>
+</section>
+
+<section>
+    <h2>Waar nu naartoe?</h2>
+    <p>Schaduwen, modellen en shaders heb je in deze cursus al gezien. Dit zijn de logische volgende heuvels:</p>
+    <ol class="stappen">
+        <li>
+            <div>
+                <h3>Post-processing</h3>
+                <p>Effecten over je hele beeld: bloom (gloed), depth of field, korrel. Zoek de voorbeelden die beginnen met webgl_postprocessing in je clone - de EffectComposer is het sleutelwoord.</p>
+            </div>
+        </li>
+        <li>
+            <div>
+                <h3>Physics</h3>
+                <p>Echte zwaartekracht, botsingen en stuiteren koppel je aan three.js met een physics-bibliotheek zoals Rapier of Cannon. three.js tekent, de physics-engine rekent - jij verbindt elke frame de posities.</p>
+            </div>
+        </li>
+        <li>
+            <div>
+                <h3>WebXR</h3>
+                <p>Dezelfde scene in virtual of augmented reality. Omdat je setAnimationLoop al gebruikt, ben je dichterbij dan je denkt: zoek de webxr-voorbeelden in je clone.</p>
+            </div>
+        </li>
+    </ol>
+
+    <aside class="callout callout--weetje">
+        <span class="callout-label">Weetje</span>
+        <p>three.js bouwt aan een WebGPU-renderer, de opvolger van WebGL - dezelfde beweging die p5.js 2.x maakt. De concepten uit deze handleiding (scene, camera, mesh, licht) blijven exact gelijk; alleen de motor eronder wordt sneller.</p>
+    </aside>
+</section>

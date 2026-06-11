@@ -1,0 +1,125 @@
+<div class="intro">
+    <p>Sfeer is wat een verzameling vormen een wereld maakt: een achtergrondkleur die meedoet, mist die diepte geeft, en een vloer die de ruimte verankert. Drie kleine ingrepen, groot effect.</p>
+</div>
+
+<div class="kernpunten">
+    <span class="kernpunten-label">Kernpunten</span>
+    <ul>
+        <li><code>scene.background</code> kan een kleur zijn, maar ook een textuur</li>
+        <li><code>scene.fog</code> laat objecten in de verte vervagen naar een kleur</li>
+        <li>De truc: geef de fog <strong>dezelfde kleur</strong> als de achtergrond, dan smelt de horizon weg</li>
+        <li><code>Fog(kleur, near, far)</code> is lineair, <code>FogExp2(kleur, dichtheid)</code> voelt natuurlijker</li>
+    </ul>
+</div>
+
+<section>
+    <h2>Mist in één regel</h2>
+    <pre><code>scene.background = new THREE.Color(0x141414);
+scene.fog = new THREE.Fog(0x141414, 5, 25);
+//                        kleur   vanaf  helemaal weg</code></pre>
+    <p>Vanaf 5 eenheden afstand begint alles te vervagen, op 25 eenheden is het volledig opgelost in de achtergrondkleur. Omdat beide kleuren gelijk zijn, zie je geen harde horizon - alleen verte.</p>
+    <p>In p5 bouwde je dit effect zelf met alpha op afstand; hier is het één eigenschap van de scene, en het werkt automatisch op elk materiaal.</p>
+</section>
+
+<section>
+    <h2>Probeer het: een eindeloos veld</h2>
+    <p>Het klassieke "oneindige wereld"-gevoel: een veld van zuilen dat in de mist verdwijnt. Sleep de fog-waarden eens omhoog of omlaag:</p>
+
+    <div class="three-editor" data-autorun="true">
+        <script type="text/three">
+import * as THREE from 'three';
+
+const scene = new THREE.Scene();
+const sfeerKleur = 0x101018;            // nachtblauw
+scene.background = new THREE.Color(sfeerKleur);
+scene.fog = new THREE.Fog(sfeerKleur, 4, 22);   // zelfde kleur: horizon smelt weg
+
+const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.1, 100);
+camera.position.set(0, 2, 8);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+document.body.appendChild(renderer.domElement);
+
+// Veld van zuilen, ver doorlopend in de diepte
+const geom = new THREE.BoxGeometry(0.4, 3, 0.4);
+const mat  = new THREE.MeshStandardMaterial({ color: 0xff007d });
+for (let x = -6; x <= 6; x++) {
+  for (let z = -20; z <= 2; z += 2) {
+    if (Math.abs(x) < 1.2) continue;        // pad in het midden vrijhouden
+    const zuil = new THREE.Mesh(geom, mat);
+    zuil.position.set(x * 1.5, 1.5, z);
+    scene.add(zuil);
+  }
+}
+
+const vloer = new THREE.Mesh(
+  new THREE.PlaneGeometry(60, 60),
+  new THREE.MeshStandardMaterial({ color: 0x202028 })
+);
+vloer.rotation.x = -Math.PI / 2;
+scene.add(vloer);
+
+const maan = new THREE.DirectionalLight(0xaaccff, 2);
+maan.position.set(3, 8, 2);
+scene.add(maan, new THREE.AmbientLight(0x8888ff, 0.3));
+
+const timer = new THREE.Timer();
+renderer.setAnimationLoop(() => {
+  timer.update();
+  // Traag vooruit zweven: de mist "onthult" de wereld
+  camera.position.z = 8 - (timer.getElapsed() * 0.6) % 4;
+  renderer.render(scene, camera);
+});
+        </script>
+    </div>
+
+    <aside class="callout callout--tip">
+        <p>De camera schuift hier telkens 4 eenheden vooruit en springt dan terug - precies de afstand tussen twee rijen zuilen. Door de mist zie je de sprong niet: een oneindige loop met twintig objecten. Dit is een klassieke game-truc.</p>
+    </aside>
+</section>
+
+<section>
+    <h2>Meer sfeerknoppen</h2>
+    <ul>
+        <li><strong>FogExp2</strong> - <code>new THREE.FogExp2(kleur, 0.08)</code>: exponentiële mist, dikker naarmate je verder kijkt. Eén dichtheidsknop in plaats van near/far.</li>
+        <li><strong>Achtergrondfoto</strong> - <code>scene.background = new THREE.TextureLoader().load('lucht.jpg')</code>. Voor echte 360°-luchten zoek je later op "equirectangular skybox".</li>
+        <li><strong>Gekleurd licht</strong> - de snelste sfeermaker die er is: een blauwe DirectionalLight is nacht, een oranje is zonsondergang. Combineer met een AmbientLight in een contrasterende kleur.</li>
+    </ul>
+
+    <aside class="callout callout--weetje">
+        <span class="callout-label">Weetje</span>
+        <p>Fog werkt in de shader van elk standaardmateriaal en kost daardoor bijna niets. Het is misschien wel de goedkoopste "production value" in heel three.js: twee regels code en je scene heeft ineens diepte en mysterie.</p>
+    </aside>
+</section>
+
+<div class="topic-oefeningen">
+    <details>
+        <summary><h2>Oefeningen</h2></summary>
+        <div class="oefening-niveau" data-niveau="1">
+            <h3>Nabootsen</h3>
+            <p class="oefening-niveau-beschrijving">Pas bestaande code aan - verander één waarde en bekijk het resultaat.</p>
+            <div class="oefening-kaart">
+                <h4>Dagversie</h4>
+                <p>Maak van de nachtscene een mistige ochtend: achtergrond en fog op 0xddddee, het licht wit en zachter.</p>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="2">
+            <h3>Variëren</h3>
+            <p class="oefening-niveau-beschrijving">Breid een voorbeeld uit met eigen aanpassingen.</p>
+            <div class="oefening-kaart">
+                <h4>Ademende mist</h4>
+                <p>Laat scene.fog.far in de loop golven tussen 10 en 30 met Math.sin. De wereld ademt.</p>
+                <details class="oefening-hint"><summary>Hint</summary><pre><code>scene.fog.far = 20 + Math.sin(timer.getElapsed()) * 10;</code></pre></details>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="3">
+            <h3>Creëren</h3>
+            <p class="oefening-niveau-beschrijving">Bouw iets nieuws met de concepten die je hebt geleerd.</p>
+            <div class="oefening-kaart">
+                <h4>Eigen eindeloze wereld</h4>
+                <p>Gebruik de loop-truc uit het voorbeeld voor je eigen oneindige tocht: een bos, een stad, een tunnel. Kies een kleurpalet voor achtergrond, fog en licht dat samen één sfeer vormt.</p>
+            </div>
+        </div>
+    </details>
+</div>

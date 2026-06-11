@@ -1,0 +1,149 @@
+<div class="intro">
+    <p>In p5 vroeg je "zit de muis in deze cirkel?" met wat afstandswiskunde. In 3D is dat lastiger: de muis leeft op een plat scherm, je objecten in de diepte. De Raycaster lost dat op: hij schiet een straal vanuit de camera door de muis, en vertelt welk object hij raakt.</p>
+</div>
+
+<div class="kernpunten">
+    <span class="kernpunten-label">Kernpunten</span>
+    <ul>
+        <li>Muiscoördinaten zet je om naar het bereik -1 tot +1 (genormaliseerd)</li>
+        <li><code>raycaster.setFromCamera(muis, camera)</code> richt de straal</li>
+        <li><code>intersectObjects(...)</code> geeft de geraakte objecten, dichtstbijzijnde eerst</li>
+        <li>Dit heet <strong>picking</strong> - het 3D-antwoord op "zit mouseX in mijn vorm?"</li>
+    </ul>
+</div>
+
+<section>
+    <h2>Het patroon</h2>
+    <p>Drie vaste stappen, die in bijna elke interactieve scene letterlijk zo terugkomen:</p>
+    <pre><code>const raycaster = new THREE.Raycaster();
+const muis = new THREE.Vector2();
+
+addEventListener('pointermove', (event) => {
+  // 1. Muis omzetten naar -1..+1 (links-onder tot rechts-boven)
+  muis.x =  (event.clientX / innerWidth)  * 2 - 1;
+  muis.y = -(event.clientY / innerHeight) * 2 + 1;
+});
+
+renderer.setAnimationLoop(() => {
+  // 2. Straal richten vanuit de camera door de muis
+  raycaster.setFromCamera(muis, camera);
+
+  // 3. Vragen wat hij raakt
+  const raak = raycaster.intersectObjects(scene.children);
+  if (raak.length > 0) {
+    raak[0].object.material.color.set(0xff007d);
+  }
+
+  renderer.render(scene, camera);
+});</code></pre>
+</section>
+
+<section>
+    <h2>Probeer het: beweeg over de kubussen</h2>
+
+    <div class="three-editor" data-autorun="true">
+        <script type="text/three">
+import * as THREE from 'three';
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xf5f5f5);
+
+const camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 100);
+camera.position.set(0, 3, 9);
+camera.lookAt(0, 0, 0);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+document.body.appendChild(renderer.domElement);
+
+// Raster van kubussen - elk met een EIGEN materiaal,
+// anders kleuren ze allemaal tegelijk
+const kubussen = [];
+for (let x = -2; x <= 2; x++) {
+  for (let y = -1; y <= 1; y++) {
+    const k = new THREE.Mesh(
+      new THREE.BoxGeometry(1, 1, 1),
+      new THREE.MeshStandardMaterial({ color: 0xffffff })
+    );
+    k.position.set(x * 1.4, y * 1.4, 0);
+    scene.add(k);
+    kubussen.push(k);
+  }
+}
+
+const zon = new THREE.DirectionalLight(0xffffff, 3);
+zon.position.set(3, 5, 6);
+scene.add(zon, new THREE.AmbientLight(0xffffff, 0.4));
+
+const raycaster = new THREE.Raycaster();
+const muis = new THREE.Vector2(-2, -2);   // start buiten beeld
+
+addEventListener('pointermove', (event) => {
+  muis.x =  (event.clientX / innerWidth)  * 2 - 1;
+  muis.y = -(event.clientY / innerHeight) * 2 + 1;
+});
+
+renderer.setAnimationLoop(() => {
+  // Alles terug wit
+  kubussen.forEach(k => k.material.color.set(0xffffff));
+
+  // Wat raakt de straal?
+  raycaster.setFromCamera(muis, camera);
+  const raak = raycaster.intersectObjects(kubussen);
+  if (raak.length > 0) {
+    raak[0].object.material.color.set(0xff007d);
+    raak[0].object.rotation.y += 0.05;
+  }
+
+  renderer.render(scene, camera);
+});
+        </script>
+    </div>
+
+    <aside class="callout callout--tip">
+        <p>raak[0] is altijd het dichtstbijzijnde object - de straal kan immers meerdere kubussen achter elkaar doorboren. Wil je klikken in plaats van hoveren? Gebruik een pointerdown-listener en doe de raycast daarin.</p>
+    </aside>
+
+    <aside class="callout callout--let-op">
+        <span class="callout-label">Let op</span>
+        <p>In dit voorbeeld krijgt elke kubus zijn eigen materiaal, terwijl je op de pagina <a href="#animatie-tijd">Animatie & tijd</a> leerde materialen te delen. Dat is bewust: gedeeld materiaal = gedeelde kleur. Wil je één object apart kleuren, dan heeft het een eigen materiaal nodig.</p>
+    </aside>
+</section>
+
+<div class="topic-oefeningen">
+    <details>
+        <summary><h2>Oefeningen</h2></summary>
+        <div class="oefening-niveau" data-niveau="1">
+            <h3>Nabootsen</h3>
+            <p class="oefening-niveau-beschrijving">Pas bestaande code aan - verander één waarde en bekijk het resultaat.</p>
+            <div class="oefening-kaart">
+                <h4>Springende hover</h4>
+                <p>Laat de geraakte kubus niet draaien maar groeien: scale.setScalar(1.4) bij raken, en in de reset-regel alles terug naar 1.</p>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="2">
+            <h3>Variëren</h3>
+            <p class="oefening-niveau-beschrijving">Breid een voorbeeld uit met eigen aanpassingen.</p>
+            <div class="oefening-kaart">
+                <h4>Klikken in plaats van hoveren</h4>
+                <p>Maak kubussen blijvend roze zodra je erop klikt (pointerdown), en weer wit bij een tweede klik. Bewaar de toestand per kubus in userData.</p>
+                <details class="oefening-hint"><summary>Hint</summary><pre><code>addEventListener('pointerdown', () => {
+  raycaster.setFromCamera(muis, camera);
+  const raak = raycaster.intersectObjects(kubussen);
+  if (raak.length > 0) {
+    const k = raak[0].object;
+    k.userData.aan = !k.userData.aan;
+  }
+});</code></pre></details>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="3">
+            <h3>Creëren</h3>
+            <p class="oefening-niveau-beschrijving">Bouw iets nieuws met de concepten die je hebt geleerd.</p>
+            <div class="oefening-kaart">
+                <h4>Whack-a-mole in 3D</h4>
+                <p>Laat telkens één willekeurige kubus oplichten; klik je hem binnen de tijd, dan scoor je een punt en licht een andere op. Houd de score bij in een HTML-element boven het canvas.</p>
+            </div>
+        </div>
+    </details>
+</div>

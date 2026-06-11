@@ -1,0 +1,5 @@
+# Volledige three.js-bibliotheekkloon (eigen repo, niet meecommitten)
+three.js/
+
+# Lokale Claude Code-instellingen
+.claude/settings.local.json

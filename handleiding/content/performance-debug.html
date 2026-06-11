@@ -1,0 +1,149 @@
+<div class="intro">
+    <p>Hoe zie je wat er misgaat in een wereld die je niet kan aanraken? Met helpers die assen en lichten zichtbaar maken, een controlepaneel met schuifjes, en een paar gewoontes die je sketch snel houden.</p>
+</div>
+
+<div class="kernpunten">
+    <span class="kernpunten-label">Kernpunten</span>
+    <ul>
+        <li><code>AxesHelper</code> en <code>GridHelper</code>: zien waar x (rood), y (groen) en z (blauw) heen wijzen</li>
+        <li><strong>lil-gui</strong> geeft je in vijf regels een controlepaneel met schuifjes - dé tweak-workflow</li>
+        <li>Snelheidsregel 1: hergebruik geometrieën en materialen</li>
+        <li>Snelheidsregel 2: duizenden kopieën van dezelfde vorm? <code>InstancedMesh</code></li>
+    </ul>
+</div>
+
+<section>
+    <h2>Helpers: je ogen in de 3D-ruimte</h2>
+    <pre><code>scene.add(new THREE.AxesHelper(3));      // rood = x, groen = y, blauw = z
+scene.add(new THREE.GridHelper(10, 10)); // vloergrid van 10x10
+
+// Waar schijnt mijn licht eigenlijk heen?
+scene.add(new THREE.DirectionalLightHelper(zon, 1));</code></pre>
+    <p>Onthoud de kleurvolgorde met "xyz = rgb". Helpers kosten bijna niets; laat ze gerust staan tot je sketch af is, zoals je in p5 tijdelijke debug-tekst op het canvas zette.</p>
+</section>
+
+<section>
+    <h2>lil-gui: schuifjes in vijf regels</h2>
+    <p>Stoppen met "waarde aanpassen, opslaan, herladen": lil-gui zit in je clone als addon en bouwt een paneel waarmee je live aan je scene draait:</p>
+
+    <div class="three-editor" data-autorun="true">
+        <script type="text/three">
+import * as THREE from 'three';
+import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x141414);
+
+const camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 100);
+camera.position.z = 5;
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+document.body.appendChild(renderer.domElement);
+
+const knoop = new THREE.Mesh(
+  new THREE.TorusKnotGeometry(1, 0.35, 128, 32),
+  new THREE.MeshStandardMaterial({ color: 0xff007d, roughness: 0.3 })
+);
+scene.add(knoop);
+
+const zon = new THREE.DirectionalLight(0xffffff, 3);
+zon.position.set(3, 4, 5);
+scene.add(zon, new THREE.AmbientLight(0xffffff, 0.3));
+
+// Het controlepaneel: instellingen-object + schuifjes
+const instellingen = {
+  snelheid: 1,
+  kleur: '#ff007d',
+  metaal: 0
+};
+
+const gui = new GUI();
+gui.add(instellingen, 'snelheid', 0, 5);          // schuifje 0..5
+gui.addColor(instellingen, 'kleur');               // kleurkiezer
+gui.add(instellingen, 'metaal', 0, 1).onChange(v => {
+  knoop.material.metalness = v;                    // direct toepassen
+});
+
+const timer = new THREE.Timer();
+renderer.setAnimationLoop(() => {
+  timer.update();
+
+  knoop.rotation.y += 0.01 * instellingen.snelheid;
+  knoop.material.color.set(instellingen.kleur);
+
+  renderer.render(scene, camera);
+});
+        </script>
+    </div>
+
+    <aside class="callout callout--tip">
+        <p>De workflow die professionals gebruiken: bouw je scene, hang elke "magische waarde" aan een gui-schuifje, draai tot het goed voelt, en schrijf de gevonden waarden terug in je code. Tweaken met schuifjes is tien keer sneller dan met herladen.</p>
+    </aside>
+</section>
+
+<section>
+    <h2>Snel blijven: de drie regels</h2>
+    <ol class="stappen">
+        <li>
+            <div>
+                <h3>Maak niets aan in de loop</h3>
+                <p>Geen new THREE.iets() in setAnimationLoop. Geometrieën, materialen en vectoren maak je één keer; in de loop wijzig je alleen waarden. Herken je van p5, maar hier weegt het zwaarder: een geometrie aanmaken is duur.</p>
+            </div>
+        </li>
+        <li>
+            <div>
+                <h3>Deel geometrieën en materialen</h3>
+                <p>Vijftig kubussen met dezelfde vorm en kleur = één geometrie + één materiaal + vijftig meshes. Elke unieke combinatie van geometrie en materiaal is een aparte "draw call" - hoe minder, hoe sneller.</p>
+            </div>
+        </li>
+        <li>
+            <div>
+                <h3>Duizenden? InstancedMesh</h3>
+                <p>Voor échte aantallen (een bos, confetti, een menigte) bestaat InstancedMesh: één object dat duizenden kopieën tekent in één draw call, elk met eigen positie en rotatie. Zoek het voorbeeld webgl_instancing_dynamic in je clone als je dit nodig hebt.</p>
+            </div>
+        </li>
+    </ol>
+
+    <aside class="callout callout--weetje">
+        <span class="callout-label">Weetje</span>
+        <p>Wil je je framerate zien zoals frameRate() in p5? In de console van je browser typ je niets speciaals: open het tabblad Performance, of voeg de Stats-addon toe (three/addons/libs/stats.module.js) voor het klassieke fps-tellertje linksboven.</p>
+    </aside>
+
+    <aside class="callout callout--let-op">
+        <span class="callout-label">Let op</span>
+        <p>Verwijder je objecten uit een scene, dan blijft hun geometrie en materiaal in het videogeheugen staan tot je zelf geometry.dispose() en material.dispose() aanroept. Voor een sketch die gewoon doorloopt maakt het niets uit; voor een app die scenes wisselt wel.</p>
+    </aside>
+</section>
+
+<div class="topic-oefeningen">
+    <details>
+        <summary><h2>Oefeningen</h2></summary>
+        <div class="oefening-niveau" data-niveau="1">
+            <h3>Nabootsen</h3>
+            <p class="oefening-niveau-beschrijving">Pas bestaande code aan - verander één waarde en bekijk het resultaat.</p>
+            <div class="oefening-kaart">
+                <h4>Extra schuifje</h4>
+                <p>Voeg in het voorbeeld een schuifje "schaal" toe (0.5 tot 2) en pas het toe met knoop.scale.setScalar in de loop.</p>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="2">
+            <h3>Variëren</h3>
+            <p class="oefening-niveau-beschrijving">Breid een voorbeeld uit met eigen aanpassingen.</p>
+            <div class="oefening-kaart">
+                <h4>Licht-regie</h4>
+                <p>Hang de positie en intensiteit van de DirectionalLight aan gui-schuifjes, en zet er een DirectionalLightHelper bij zodat je ziet wat je doet.</p>
+                <details class="oefening-hint"><summary>Hint</summary><pre><code>gui.add(zon.position, 'x', -10, 10);
+gui.add(zon, 'intensity', 0, 10);</code></pre></details>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="3">
+            <h3>Creëren</h3>
+            <p class="oefening-niveau-beschrijving">Bouw iets nieuws met de concepten die je hebt geleerd.</p>
+            <div class="oefening-kaart">
+                <h4>Tweak-station</h4>
+                <p>Neem je mooiste sketch uit deze cursus en hang er een volledig gui-paneel aan: kleuren, snelheden, fog-afstand, camera-fov. Maak er je eigen visuele instrument van.</p>
+            </div>
+        </div>
+    </details>
+</div>

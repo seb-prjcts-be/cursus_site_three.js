@@ -1,0 +1,130 @@
+<div class="intro">
+    <p>Met OrbitControls draai je met de muis rond je scene - hetzelfde gevoel als orbitControl() in p5. En omdat three.js niets vanzelf doet, leer je hier ook je scene laten meeschalen met het venster.</p>
+</div>
+
+<div class="kernpunten">
+    <span class="kernpunten-label">Kernpunten</span>
+    <ul>
+        <li><code>OrbitControls</code> is een <strong>addon</strong>: je importeert hem uit <code>three/addons/</code></li>
+        <li>Slepen = draaien, scrollen = zoomen, rechts slepen = verschuiven</li>
+        <li><code>enableDamping</code> geeft een soepel uitdraai-effect, maar vraagt <code>controls.update()</code> in de loop</li>
+        <li>Bij venster-resize werk je zelf <code>camera.aspect</code> en <code>renderer.setSize()</code> bij</li>
+    </ul>
+</div>
+
+<section>
+    <h2>Addons: de tweede import</h2>
+    <p>De kern van three.js houdt zichzelf klein. Veel goeds leeft in de addons-map: OrbitControls, model-loaders, effecten. Je herkent ze aan de tweede import-regel:</p>
+    <pre><code>import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// na het maken van camera en renderer:
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;   // soepel uitdraaien
+
+renderer.setAnimationLoop(() => {
+  controls.update();             // nodig voor damping
+  renderer.render(scene, camera);
+});</code></pre>
+</section>
+
+<section>
+    <h2>Probeer het: sleep, scroll, verschuif</h2>
+
+    <div class="three-editor" data-autorun="true">
+        <script type="text/three">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x141414);
+
+const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.1, 100);
+camera.position.set(4, 3, 6);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+document.body.appendChild(renderer.domElement);
+
+// Het te bekijken object
+const knoop = new THREE.Mesh(
+  new THREE.TorusKnotGeometry(1.2, 0.4, 128, 32),
+  new THREE.MeshStandardMaterial({ color: 0xff007d, roughness: 0.3 })
+);
+scene.add(knoop);
+
+// Een grid als vloer: geeft gevoel van ruimte bij het draaien
+scene.add(new THREE.GridHelper(10, 10, 0x666666, 0x333333));
+
+const zon = new THREE.DirectionalLight(0xffffff, 3);
+zon.position.set(5, 8, 5);
+scene.add(zon, new THREE.AmbientLight(0xffffff, 0.3));
+
+// p5: orbitControl() - hier een object met opties
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+
+renderer.setAnimationLoop(() => {
+  controls.update();
+  renderer.render(scene, camera);
+});
+        </script>
+    </div>
+
+    <aside class="callout callout--tip">
+        <p>Handige opties om in de editor te proberen: controls.autoRotate = true (de camera draait vanzelf, mooi voor presentaties), controls.minDistance en maxDistance (beperk het zoomen), en controls.enablePan = false (verschuiven uitzetten).</p>
+    </aside>
+</section>
+
+<section>
+    <h2>Meeschalen met het venster</h2>
+    <p>p5 had windowResized() en resizeCanvas(). In three.js schrijf je die reflex zelf - drie regels die in elke fullscreen-sketch thuishoren:</p>
+    <pre><code>addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();           // camera laten herrekenen
+  renderer.setSize(innerWidth, innerHeight);
+});</code></pre>
+
+    <aside class="callout callout--let-op">
+        <span class="callout-label">Let op</span>
+        <p>Vergeet je camera.updateProjectionMatrix(), dan blijft het beeld uitgerokken na het resizen. De camera onthoudt zijn instellingen tot je expliciet zegt: herbereken. Dit is de meest vergeten regel van three.js.</p>
+    </aside>
+
+    <aside class="callout callout--weetje">
+        <span class="callout-label">Weetje</span>
+        <p>GridHelper uit het voorbeeld is één van de vele helpers: AxesHelper toont de x-, y- en z-as als rode, groene en blauwe lijnen, en is goud waard als je niet meer weet welke kant "voor" is. Meer helpers vind je in de les <a href="#performance-debug">Debuggen & snelheid</a>.</p>
+    </aside>
+</section>
+
+<div class="topic-oefeningen">
+    <details>
+        <summary><h2>Oefeningen</h2></summary>
+        <div class="oefening-niveau" data-niveau="1">
+            <h3>Nabootsen</h3>
+            <p class="oefening-niveau-beschrijving">Pas bestaande code aan - verander één waarde en bekijk het resultaat.</p>
+            <div class="oefening-kaart">
+                <h4>Vanzelf draaien</h4>
+                <p>Zet controls.autoRotate = true en speel met controls.autoRotateSpeed. Sleep tijdens het draaien: jij wint altijd van de autorotatie.</p>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="2">
+            <h3>Variëren</h3>
+            <p class="oefening-niveau-beschrijving">Breid een voorbeeld uit met eigen aanpassingen.</p>
+            <div class="oefening-kaart">
+                <h4>Begrensde camera</h4>
+                <p>Zorg dat de kijker niet onder de vloer kan duiken en niet oneindig ver kan wegzoomen: combineer maxPolarAngle, minDistance en maxDistance.</p>
+                <details class="oefening-hint"><summary>Hint</summary><pre><code>controls.maxPolarAngle = Math.PI / 2.1;  // net boven de vloer
+controls.minDistance = 3;
+controls.maxDistance = 15;</code></pre></details>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="3">
+            <h3>Creëren</h3>
+            <p class="oefening-niveau-beschrijving">Bouw iets nieuws met de concepten die je hebt geleerd.</p>
+            <div class="oefening-kaart">
+                <h4>Mini-museum</h4>
+                <p>Zet drie of vier sculpturen (uit eerdere oefeningen) op sokkels in één scene, met een vloer en goede belichting. Stel de OrbitControls zo af dat bezoekers vrij kunnen rondkijken maar nergens "uit het museum" kunnen vallen.</p>
+            </div>
+        </div>
+    </details>
+</div>

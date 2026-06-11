@@ -1,0 +1,259 @@
+/* p5.js Live Editor Styling - Lab44 Minimalistische Stijl */
+/* --p5-pink is gedefinieerd in style.css :root */
+
+.p5-editor,
+.three-editor {
+    margin: 2rem 0;
+    border: 1px solid var(--border-color, #e0e0e0);
+    background: var(--bg-color, #ffffff);
+}
+
+.p5-editor-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.p5-editor-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.6rem 0.85rem;
+    background: var(--bg-color, #ffffff);
+    border-bottom: 1px solid var(--border-color, #e0e0e0);
+}
+
+.p5-editor-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-family: var(--font-title, 'Oswald', Arial, sans-serif);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--p5-pink);
+}
+
+.p5-editor-brand i {
+    font-size: 0.95rem;
+    line-height: 1;
+}
+
+.p5-editor-actions {
+    display: inline-flex;
+    gap: 0.4rem;
+}
+
+.p5-editor-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.85rem;
+    font-family: var(--font-title, 'Oswald', Arial, sans-serif);
+    font-size: 0.82rem;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    background: var(--bg-color, #ffffff);
+    color: var(--text-color, #000000);
+    border: 1px solid var(--border-color, #e0e0e0);
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.p5-editor-btn i {
+    font-size: 0.95rem;
+    line-height: 1;
+}
+
+.p5-editor-btn:hover {
+    background: var(--hover-bg, #f5f5f5);
+    border-color: var(--text-color, #000000);
+}
+
+.p5-editor-btn:active {
+    background: var(--border-color, #e0e0e0);
+}
+
+/* Primary action (Run) — roze */
+.p5-editor-btn--primary {
+    background: var(--p5-pink);
+    color: #ffffff;
+    border-color: var(--p5-pink);
+}
+
+.p5-editor-btn--primary:hover {
+    background: #ffffff;
+    color: var(--p5-pink);
+    border-color: var(--p5-pink);
+}
+
+.p5-editor-btn--primary:active {
+    background: var(--p5-pink);
+    color: #ffffff;
+}
+
+.p5-editor-split {
+    display: flex;
+    min-height: 400px;
+}
+
+.p5-editor-code-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--border-color, #e0e0e0);
+    position: relative;
+}
+
+.p5-editor-code-panel::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 2px;
+    height: 100%;
+    background: transparent;
+    transition: background-color 0.15s;
+    pointer-events: none;
+}
+
+.p5-editor-code-panel:focus-within::before {
+    background: var(--p5-pink);
+}
+
+.p5-editor-code {
+    flex: 1;
+    width: 100%;
+    padding: 1rem 1rem 1rem 1.1rem;
+    font-family: "Courier New", "Consolas", "Monaco", monospace;
+    font-size: 14px;
+    line-height: 1.55;
+    border: none;
+    resize: none;
+    background: var(--bg-color, #ffffff);
+    color: var(--text-color, #000000);
+    outline: none;
+    tab-size: 2;
+    caret-color: var(--p5-pink);
+}
+
+.p5-editor-code::selection {
+    background: rgba(255, 0, 125, 0.2);
+}
+
+/* === CodeMirror in huisstijl (three.js handleiding) === */
+
+.p5-editor-code-panel .CodeMirror {
+    flex: 1;
+    height: auto;
+    font-family: "Courier New", "Consolas", "Monaco", monospace;
+    font-size: 14px;
+    line-height: 1.55;
+    background: var(--bg-color, #ffffff);
+    color: var(--text-color, #000000);
+}
+
+.p5-editor-code-panel .CodeMirror-lines {
+    padding: 1rem 0;
+}
+
+.p5-editor-code-panel .CodeMirror-gutters {
+    background: var(--bg-color, #ffffff);
+    border-right: 1px solid var(--border-color, #e0e0e0);
+}
+
+.p5-editor-code-panel .CodeMirror-linenumber {
+    color: #c0c0c0;
+    font-size: 12px;
+}
+
+.p5-editor-code-panel .CodeMirror-cursor {
+    border-left: 2px solid var(--p5-pink);
+}
+
+.p5-editor-code-panel .CodeMirror-selected {
+    background: rgba(255, 0, 125, 0.15);
+}
+
+.p5-editor-code-panel .CodeMirror-focused .CodeMirror-selected {
+    background: rgba(255, 0, 125, 0.2);
+}
+
+.p5-editor-code-panel .CodeMirror-matchingbracket {
+    color: var(--p5-pink) !important;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+/* Token-kleuren: zwart-grijs-roze, geen vreemde kleuren in de huisstijl */
+.p5-editor-code-panel .cm-keyword  { color: var(--text-color, #000); font-weight: bold; }
+.p5-editor-code-panel .cm-def      { color: var(--text-color, #000); }
+.p5-editor-code-panel .cm-variable,
+.p5-editor-code-panel .cm-variable-2,
+.p5-editor-code-panel .cm-property { color: var(--text-color, #000); }
+.p5-editor-code-panel .cm-number   { color: var(--p5-pink); }
+.p5-editor-code-panel .cm-atom     { color: var(--p5-pink); }
+.p5-editor-code-panel .cm-string,
+.p5-editor-code-panel .cm-string-2 { color: #666666; }
+.p5-editor-code-panel .cm-comment  { color: #999999; font-style: italic; }
+.p5-editor-code-panel .cm-operator { color: var(--text-color, #000); }
+
+.p5-editor-preview-panel {
+    flex: 1;
+    display: flex;
+    background: var(--code-bg, #f5f5f5);
+}
+
+.p5-editor-preview {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: var(--bg-color, #ffffff);
+}
+
+.p5-editor-footer {
+    padding: 0.35rem 0.85rem;
+    font-family: var(--font-title, 'Oswald', Arial, sans-serif);
+    font-size: 0.7rem;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--text-light, #888);
+    background: var(--bg-color, #ffffff);
+    border-top: 1px solid var(--border-color, #e0e0e0);
+    text-align: right;
+}
+
+/* Responsive: stapel op mobile */
+@media (max-width: 768px) {
+    .p5-editor-split {
+        flex-direction: column;
+        min-height: 600px;
+    }
+
+    .p5-editor-code-panel {
+        flex: 1;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color, #e0e0e0);
+    }
+
+    .p5-editor-preview-panel {
+        flex: 1;
+        min-height: 300px;
+    }
+}
+
+/* Compacte versie voor kleinere schermen */
+@media (max-width: 480px) {
+    .p5-editor-controls {
+        flex-wrap: wrap;
+    }
+
+    .p5-editor-actions {
+        flex: 1;
+        justify-content: flex-end;
+    }
+
+    .p5-editor-split {
+        min-height: 500px;
+    }
+}

@@ -1,0 +1,136 @@
+<div class="intro">
+    <p>In p5 is een vorm één commando: box(100). In three.js bestaat elke vorm uit twee delen: een geometrie (de vorm) en een materiaal (het uiterlijk). Samen worden ze een mesh.</p>
+</div>
+
+<div class="kernpunten">
+    <span class="kernpunten-label">Kernpunten</span>
+    <ul>
+        <li><code>Mesh = Geometry + Material</code> - vorm en uiterlijk zijn gescheiden</li>
+        <li>Geometrieën: <code>BoxGeometry</code>, <code>SphereGeometry</code>, <code>CylinderGeometry</code>, <code>TorusGeometry</code>, <code>PlaneGeometry</code>, ...</li>
+        <li><code>MeshStandardMaterial</code> reageert op licht, <code>MeshBasicMaterial</code> niet (zoals een platte fill)</li>
+        <li>Eén geometrie of materiaal mag je hergebruiken voor veel meshes - dat is gratis performance</li>
+    </ul>
+</div>
+
+<section>
+    <h2>Vorm + uiterlijk = mesh</h2>
+    <p>De p5-regel <code>fill(255, 0, 125); box(100);</code> wordt in three.js:</p>
+    <pre><code>const geometry = new THREE.BoxGeometry(1, 1, 1);  // de vorm
+const material = new THREE.MeshStandardMaterial({ color: 0xff007d });  // het uiterlijk
+const mesh = new THREE.Mesh(geometry, material);   // samen: een ding in de wereld
+scene.add(mesh);</code></pre>
+    <p>Waarom die splitsing? Omdat je delen kunt hergebruiken. Honderd bollen met dezelfde vorm maar andere kleuren: één geometrie, honderd materialen. Honderd identieke knikkers: één geometrie, één materiaal, honderd meshes.</p>
+</section>
+
+<section>
+    <h2>De vormen-bibliotheek</h2>
+    <p>De namen lijken sterk op wat je kent uit p5 WEBGL-mode:</p>
+    <ul>
+        <li><code>BoxGeometry(b, h, d)</code> - p5: <code>box()</code></li>
+        <li><code>SphereGeometry(straal)</code> - p5: <code>sphere()</code></li>
+        <li><code>CylinderGeometry(stralBoven, straalOnder, hoogte)</code> - p5: <code>cylinder()</code>, maar met twee stralen: maak er een kegel mee</li>
+        <li><code>TorusGeometry(straal, buisdikte)</code> - p5: <code>torus()</code></li>
+        <li><code>PlaneGeometry(b, h)</code> - p5: <code>plane()</code></li>
+        <li><code>TorusKnotGeometry(...)</code> - bestaat niet in p5, en is veel te mooi om te negeren</li>
+    </ul>
+
+    <div class="three-editor" data-autorun="true">
+        <script type="text/three">
+import * as THREE from 'three';
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xf5f5f5);
+
+const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.1, 100);
+camera.position.z = 7;
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+document.body.appendChild(renderer.domElement);
+
+// Eén materiaal, drie verschillende geometrieën
+const mat = new THREE.MeshStandardMaterial({ color: 0xff007d });
+
+const bol   = new THREE.Mesh(new THREE.SphereGeometry(1), mat);
+const donut = new THREE.Mesh(new THREE.TorusGeometry(0.9, 0.35), mat);
+const knoop = new THREE.Mesh(new THREE.TorusKnotGeometry(0.7, 0.25), mat);
+
+bol.position.x   = -3;   // p5: push(); translate(-3, 0); sphere(); pop();
+knoop.position.x =  3;
+
+scene.add(bol, donut, knoop);
+
+const zon = new THREE.DirectionalLight(0xffffff, 3);
+zon.position.set(3, 5, 4);
+scene.add(zon, new THREE.AmbientLight(0xffffff, 0.4));
+
+renderer.setAnimationLoop(() => {
+  donut.rotation.x += 0.01;
+  knoop.rotation.y += 0.01;
+  renderer.render(scene, camera);
+});
+        </script>
+    </div>
+</section>
+
+<section>
+    <h2>Materialen: de nieuwe fill()</h2>
+    <p>In p5 kies je een tekenstaat: fill, stroke, normalMaterial. In three.js kies je per object een materiaal-type:</p>
+    <ul>
+        <li><code>MeshBasicMaterial</code> - platte kleur, negeert licht. Zoals fill() zonder lights(). Handig om te debuggen: dit materiaal is nooit "per ongeluk zwart".</li>
+        <li><code>MeshNormalMaterial</code> - regenboogkleuren op basis van de richting van elk vlak. Identiek aan p5's <code>normalMaterial()</code>.</li>
+        <li><code>MeshStandardMaterial</code> - fysisch realistisch, reageert op licht. Met <code>roughness</code> (ruwheid) en <code>metalness</code> (metaalglans), elk van 0 tot 1. Dit is je standaardkeuze.</li>
+    </ul>
+    <pre><code>new THREE.MeshStandardMaterial({
+  color: 0xff007d,
+  roughness: 0.3,   // 0 = spiegelglad, 1 = mat
+  metalness: 0.8    // 0 = plastic, 1 = metaal
+});</code></pre>
+
+    <aside class="callout callout--tip">
+        <p>Object zwart en je weet niet waarom? Vervang het materiaal tijdelijk door MeshNormalMaterial. Zie je het object dan wel, dan is je probleem het licht, niet de geometrie.</p>
+    </aside>
+
+    <aside class="callout callout--weetje">
+        <span class="callout-label">Weetje</span>
+        <p>Een geometrie is onder de motorkap gewoon een lijst driehoeken. SphereGeometry(1, 32, 16) maakt een bol uit 32 bij 16 segmenten. Minder segmenten = hoekiger en sneller, meer = ronder en trager. Dat is hetzelfde als detail-parameters bij p5's sphere().</p>
+    </aside>
+</section>
+
+<div class="topic-oefeningen">
+    <details>
+        <summary><h2>Oefeningen</h2></summary>
+        <div class="oefening-niveau" data-niveau="1">
+            <h3>Nabootsen</h3>
+            <p class="oefening-niveau-beschrijving">Pas bestaande code aan - verander één waarde en bekijk het resultaat.</p>
+            <div class="oefening-kaart">
+                <h4>Hoekige bol</h4>
+                <p>Geef de bol in het voorbeeld extra parameters: SphereGeometry(1, 8, 4). Tel de hoeken. Zet hem daarna op (1, 64, 32).</p>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="2">
+            <h3>Variëren</h3>
+            <p class="oefening-niveau-beschrijving">Breid een voorbeeld uit met eigen aanpassingen.</p>
+            <div class="oefening-kaart">
+                <h4>Materialen-staalkaart</h4>
+                <p>Maak vijf bollen naast elkaar met dezelfde geometrie maar elk een eigen MeshStandardMaterial: metalness van 0 tot 1 in stappen. Eén lus, vijf materialen.</p>
+                <details class="oefening-hint"><summary>Hint</summary><pre><code>for (let i = 0; i < 5; i++) {
+  const m = new THREE.MeshStandardMaterial({
+    color: 0xff007d, metalness: i / 4, roughness: 0.3
+  });
+  const b = new THREE.Mesh(bolGeom, m);
+  b.position.x = (i - 2) * 2.2;
+  scene.add(b);
+}</code></pre></details>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="3">
+            <h3>Creëren</h3>
+            <p class="oefening-niveau-beschrijving">Bouw iets nieuws met de concepten die je hebt geleerd.</p>
+            <div class="oefening-kaart">
+                <h4>Sculptuur</h4>
+                <p>Bouw een abstract beeldhouwwerk uit minstens zes vormen. Beperk je tot twee materialen die je deelt tussen de meshes - dwing jezelf tot compositie met positie, rotatie en schaal.</p>
+            </div>
+        </div>
+    </details>
+</div>

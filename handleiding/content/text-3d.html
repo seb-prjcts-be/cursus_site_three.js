@@ -1,0 +1,148 @@
+<div class="intro">
+    <p>Echte 3D-letters met diepte, die schaduw werpen en glanzen als elk ander object. Je hebt er twee addons voor nodig: een FontLoader en de TextGeometry.</p>
+</div>
+
+<div class="kernpunten">
+    <span class="kernpunten-label">Kernpunten</span>
+    <ul>
+        <li>3D-tekst is gewoon een geometrie: <code>TextGeometry</code> + materiaal = mesh</li>
+        <li>Het font is een speciaal JSON-bestand, geladen met de <code>FontLoader</code></li>
+        <li>Laden is asynchroon: je bouwt de tekst <strong>in de callback</strong>, zoals bij loadFont in p5</li>
+        <li><code>geometry.center()</code> zet het draaipunt in het midden van de tekst</li>
+    </ul>
+</div>
+
+<section>
+    <h2>Het recept</h2>
+    <pre><code>import { FontLoader } from 'three/addons/loaders/FontLoader.js';
+import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
+
+new FontLoader().load('pad/naar/font.typeface.json', (font) => {
+  const geom = new TextGeometry('HALLO', {
+    font: font,
+    size: 1,        // hoogte van de letters
+    depth: 0.3,     // dikte (de derde dimensie!)
+    curveSegments: 8
+  });
+  geom.center();    // anders draait de tekst om zijn linkerkant
+
+  const tekst = new THREE.Mesh(geom, materiaal);
+  scene.add(tekst);
+});</code></pre>
+    <p>Vergelijk met p5: loadFont in preload, daarna text(). Hier gebeurt alles in de load-callback, want zonder font geen geometrie. De rest van je sketch (renderer, loop) draait gewoon door terwijl het font laadt.</p>
+</section>
+
+<section>
+    <h2>Probeer het: typ je eigen woord</h2>
+    <p>Het font komt uit je lokale three.js-clone. Verander 'LAB44' in je eigen tekst en klik Run:</p>
+
+    <div class="three-editor" data-autorun="true">
+        <script type="text/three">
+import * as THREE from 'three';
+import { FontLoader } from 'three/addons/loaders/FontLoader.js';
+import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x141414);
+
+const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.1, 100);
+camera.position.z = 6;
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+document.body.appendChild(renderer.domElement);
+
+const zon = new THREE.DirectionalLight(0xffffff, 3);
+zon.position.set(2, 3, 5);
+scene.add(zon, new THREE.AmbientLight(0xffffff, 0.3));
+
+let tekst = null;   // bestaat pas als het font geladen is
+
+new FontLoader().load(
+  '../three.js/examples/fonts/helvetiker_bold.typeface.json',
+  (font) => {
+    const geom = new TextGeometry('LAB44', {
+      font: font,
+      size: 1.2,
+      depth: 0.4,
+      curveSegments: 8
+    });
+    geom.center();
+
+    tekst = new THREE.Mesh(geom, new THREE.MeshStandardMaterial({
+      color: 0xff007d,
+      roughness: 0.25,
+      metalness: 0.4
+    }));
+    scene.add(tekst);
+  }
+);
+
+const timer = new THREE.Timer();
+renderer.setAnimationLoop(() => {
+  timer.update();
+  const t = timer.getElapsed();
+
+  if (tekst) {                       // pas animeren als hij bestaat
+    tekst.rotation.y = Math.sin(t * 0.8) * 0.6;
+    tekst.position.y = Math.sin(t * 1.6) * 0.2;
+  }
+
+  renderer.render(scene, camera);
+});
+        </script>
+    </div>
+
+    <aside class="callout callout--tip">
+        <p>Let op het patroon let tekst = null en if (tekst) in de loop. Dat is dé manier om met asynchroon geladen dingen om te gaan - je ziet het straks ook bij 3D-modellen terugkomen.</p>
+    </aside>
+
+    <aside class="callout callout--let-op">
+        <span class="callout-label">Let op</span>
+        <p>Veel letters met veel curveSegments worden zware geometrieën. Voor een titel is dat prima; voor een hele paragraaf tekst gebruik je beter een vlak met een canvas-textuur, of gewoon HTML over je canvas heen.</p>
+    </aside>
+</section>
+
+<section>
+    <h2>Eigen fonts</h2>
+    <p>In de clone zitten een paar fonts klaar in <code>three.js/examples/fonts/</code> (helvetiker, optimer, gentilis - elk regular en bold). Wil je een eigen font gebruiken, zoek dan online naar een "typeface.json converter": die zet een gewoon ttf-bestand om naar het JSON-formaat dat FontLoader leest.</p>
+
+    <aside class="callout callout--weetje">
+        <span class="callout-label">Weetje</span>
+        <p>TextGeometry bouwt letters door het lettertype-omtrek te extruderen - hetzelfde principe als een koekjesvorm door deeg duwen. De depth-parameter is letterlijk hoe diep je duwt.</p>
+    </aside>
+</section>
+
+<div class="topic-oefeningen">
+    <details>
+        <summary><h2>Oefeningen</h2></summary>
+        <div class="oefening-niveau" data-niveau="1">
+            <h3>Nabootsen</h3>
+            <p class="oefening-niveau-beschrijving">Pas bestaande code aan - verander één waarde en bekijk het resultaat.</p>
+            <div class="oefening-kaart">
+                <h4>Jouw naam, extra dik</h4>
+                <p>Zet je eigen naam in het voorbeeld en geef de letters depth 1.5. Bekijk het van opzij door camera.position.x op 4 te zetten.</p>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="2">
+            <h3>Variëren</h3>
+            <p class="oefening-niveau-beschrijving">Breid een voorbeeld uit met eigen aanpassingen.</p>
+            <div class="oefening-kaart">
+                <h4>Schaduwletters</h4>
+                <p>Combineer met de les <a href="#schaduwen">Schaduwen</a>: zet de tekst boven een vloer, laat hem castShadow doen en de vloer receiveShadow.</p>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="3">
+            <h3>Creëren</h3>
+            <p class="oefening-niveau-beschrijving">Bouw iets nieuws met de concepten die je hebt geleerd.</p>
+            <div class="oefening-kaart">
+                <h4>Kinetische typografie</h4>
+                <p>Maak per letter een aparte TextGeometry (lus over de tekens van een woord) en laat elke letter met zijn eigen fase golven - de 3D-versie van het klassieke p5-tekstgolf-effect.</p>
+                <details class="oefening-hint"><summary>Hint</summary><pre><code>'LAB44'.split('').forEach((letter, i) => {
+  // maak TextGeometry per letter, position.x = i * 1.1
+  // in de loop: position.y = Math.sin(t * 2 + i * 0.6) * 0.3
+});</code></pre></details>
+            </div>
+        </div>
+    </details>
+</div>

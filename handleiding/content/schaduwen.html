@@ -1,0 +1,145 @@
+<div class="intro">
+    <p>Schaduwen zijn het verschil tussen vormen die zweven en een scene die echt voelt. Ze staan standaard uit omdat ze rekenkracht kosten - je zet ze aan op drie plekken: de renderer, het licht, en de objecten.</p>
+</div>
+
+<div class="kernpunten">
+    <span class="kernpunten-label">Kernpunten</span>
+    <ul>
+        <li>Stap 1: <code>renderer.shadowMap.enabled = true</code> - de hoofdschakelaar</li>
+        <li>Stap 2: <code>licht.castShadow = true</code> - alleen Directional-, Point- en SpotLight kunnen het</li>
+        <li>Stap 3: per object <code>castShadow</code> (werpt schaduw) en/of <code>receiveShadow</code> (vangt schaduw)</li>
+        <li>Blokkerige randen? Vergroot de resolutie met <code>licht.shadow.mapSize</code></li>
+    </ul>
+</div>
+
+<section>
+    <h2>De drie schakelaars</h2>
+    <p>three.js laat je per onderdeel kiezen, want elke schaduw kost prestaties. Het volledige recept:</p>
+    <pre><code>// 1. Renderer: hoofdschakelaar
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;  // zachtere randen
+
+// 2. Licht: dit licht werpt schaduwen
+zon.castShadow = true;
+zon.shadow.mapSize.set(2048, 2048);  // hogere resolutie = strakkere rand
+
+// 3. Objecten: wie werpt, wie vangt
+kubus.castShadow = true;      // de kubus werpt schaduw
+vloer.receiveShadow = true;   // de vloer vangt ze op</code></pre>
+    <p>Een object mag ook allebei: een bol op een tafel werpt schaduw op de tafel én vangt de schaduw van een lamp erboven.</p>
+
+    <aside class="callout callout--let-op">
+        <span class="callout-label">Let op</span>
+        <p>AmbientLight kan geen schaduwen werpen - het komt per definitie van overal. Zie je geen schaduw, loop dan de drie schakelaars in volgorde na; negen van de tien keer ontbreekt er precies één.</p>
+    </aside>
+</section>
+
+<section>
+    <h2>Probeer het: stuiterende bol met schaduw</h2>
+
+    <div class="three-editor" data-autorun="true">
+        <script type="text/three">
+import * as THREE from 'three';
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xf5f5f5);
+
+const camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 100);
+camera.position.set(4, 3, 6);
+camera.lookAt(0, 1, 0);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true;                 // schakelaar 1
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.appendChild(renderer.domElement);
+
+// Vloer die schaduw vangt
+const vloer = new THREE.Mesh(
+  new THREE.PlaneGeometry(20, 20),
+  new THREE.MeshStandardMaterial({ color: 0xffffff })
+);
+vloer.rotation.x = -Math.PI / 2;   // plat leggen
+vloer.receiveShadow = true;        // schakelaar 3b
+scene.add(vloer);
+
+// Bol die schaduw werpt
+const bol = new THREE.Mesh(
+  new THREE.SphereGeometry(0.7),
+  new THREE.MeshStandardMaterial({ color: 0xff007d })
+);
+bol.castShadow = true;             // schakelaar 3a
+scene.add(bol);
+
+// Zon met schaduw
+const zon = new THREE.DirectionalLight(0xffffff, 3);
+zon.position.set(4, 6, 3);
+zon.castShadow = true;             // schakelaar 2
+zon.shadow.mapSize.set(2048, 2048);
+scene.add(zon, new THREE.AmbientLight(0xffffff, 0.4));
+
+const timer = new THREE.Timer();
+renderer.setAnimationLoop(() => {
+  timer.update();
+  const t = timer.getElapsed();
+
+  // Stuiteren: absolute waarde van sin = altijd boven de vloer
+  bol.position.y = 0.7 + Math.abs(Math.sin(t * 3)) * 2;
+  bol.position.x = Math.sin(t * 0.7) * 2;
+
+  renderer.render(scene, camera);
+});
+        </script>
+    </div>
+
+    <aside class="callout callout--tip">
+        <p>Kijk hoe de schaduw scherper wordt als de bol de vloer nadert en zachter als hij stijgt - dat doet PCFSoftShadowMap voor je. Zet de regel eens uit en vergelijk.</p>
+    </aside>
+</section>
+
+<section>
+    <h2>Als de schaduw er raar uitziet</h2>
+    <ul>
+        <li><strong>Blokkerige rand</strong> - verhoog <code>shadow.mapSize</code> naar 2048 of 4096 (kost geheugen).</li>
+        <li><strong>Schaduw afgekapt</strong> - bij DirectionalLight is het schaduwgebied een doos rond het nulpunt. Grote scene? Vergroot <code>zon.shadow.camera.left/right/top/bottom</code>.</li>
+        <li><strong>Strepen op oppervlakken</strong> ("shadow acne") - speel met <code>zon.shadow.bias</code>, bijvoorbeeld -0.0005.</li>
+    </ul>
+
+    <aside class="callout callout--weetje">
+        <span class="callout-label">Weetje</span>
+        <p>Onder de motorkap rendert three.js de scene een extra keer vanuit het licht, naar een onzichtbare dieptetextuur (de shadow map). Daarom kosten schaduwen prestaties: elke schaduwwerpende lamp is een extra render per frame. p5 heeft dit mechanisme niet - dit is typisch het punt waar three.js de meerwaarde toont.</p>
+    </aside>
+</section>
+
+<div class="topic-oefeningen">
+    <details>
+        <summary><h2>Oefeningen</h2></summary>
+        <div class="oefening-niveau" data-niveau="1">
+            <h3>Nabootsen</h3>
+            <p class="oefening-niveau-beschrijving">Pas bestaande code aan - verander één waarde en bekijk het resultaat.</p>
+            <div class="oefening-kaart">
+                <h4>Lage zon</h4>
+                <p>Zet de zon in het voorbeeld op positie (8, 1.5, 3) en kijk wat er met de schaduw gebeurt. Avondlicht!</p>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="2">
+            <h3>Variëren</h3>
+            <p class="oefening-niveau-beschrijving">Breid een voorbeeld uit met eigen aanpassingen.</p>
+            <div class="oefening-kaart">
+                <h4>Meer werpers</h4>
+                <p>Voeg twee kubussen toe die ook castShadow hebben, op verschillende hoogtes. Laat één ervan óók receiveShadow hebben en laat de bol erover stuiteren.</p>
+                <details class="oefening-hint"><summary>Hint</summary><pre><code>const k = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), mat);
+k.castShadow = true;
+k.receiveShadow = true;</code></pre></details>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="3">
+            <h3>Creëren</h3>
+            <p class="oefening-niveau-beschrijving">Bouw iets nieuws met de concepten die je hebt geleerd.</p>
+            <div class="oefening-kaart">
+                <h4>Zonnewijzer</h4>
+                <p>Bouw een scene met één hoog object en laat de zon (DirectionalLight) in een boog over de scene bewegen met sin/cos. De schaduw wordt je wijzer.</p>
+            </div>
+        </div>
+    </details>
+</div>

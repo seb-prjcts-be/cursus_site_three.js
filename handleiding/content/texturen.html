@@ -1,0 +1,121 @@
+<div class="intro">
+    <p>Een textuur is een afbeelding die om een 3D-vorm gewikkeld wordt. De TextureLoader is de three.js-versie van loadImage() - en je plakt het resultaat rechtstreeks op een materiaal.</p>
+</div>
+
+<div class="kernpunten">
+    <span class="kernpunten-label">Kernpunten</span>
+    <ul>
+        <li><code>new THREE.TextureLoader().load(pad)</code> laadt een afbeelding als textuur</li>
+        <li>Je hangt de textuur aan het materiaal via de eigenschap <code>map</code></li>
+        <li>Laden gaat asynchroon, maar three.js toont het object al en vult de textuur in zodra ze er is - geen preload() nodig</li>
+        <li>Elke geometrie heeft ingebouwde <strong>UV-coördinaten</strong> die bepalen hoe de afbeelding om de vorm wikkelt</li>
+    </ul>
+</div>
+
+<section>
+    <h2>Van loadImage naar TextureLoader</h2>
+    <pre><code>// p5
+let img;
+function preload() { img = loadImage('steen.jpg'); }
+
+// three.js
+const textuur = new THREE.TextureLoader().load('steen.jpg');
+const materiaal = new THREE.MeshStandardMaterial({ map: textuur });</code></pre>
+    <p>Geen preload-gedoe: de renderer tekent gewoon door en de textuur verschijnt zodra ze geladen is. De eigenschap heet <code>map</code> omdat er nog veel meer "maps" bestaan: <code>roughnessMap</code>, <code>normalMap</code>, <code>bumpMap</code> - allemaal afbeeldingen die een materiaaleigenschap per pixel sturen.</p>
+</section>
+
+<section>
+    <h2>Probeer het: het UV-testraster</h2>
+    <p>Dit voorbeeld laadt het officiële UV-testraster uit je lokale three.js-clone. Elk vakje toont waar dat stuk van de afbeelding op de vorm terechtkomt. Wissel de geometrie eens om: vervang de kubus door een <code>SphereGeometry(1.5)</code> of <code>TorusKnotGeometry(1, 0.4)</code>.</p>
+
+    <div class="three-editor" data-autorun="true">
+        <script type="text/three">
+import * as THREE from 'three';
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x141414);
+
+const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.1, 100);
+camera.position.z = 5;
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+document.body.appendChild(renderer.domElement);
+
+// Textuur uit de lokale three.js-clone (p5: loadImage)
+const textuur = new THREE.TextureLoader()
+  .load('../three.js/examples/textures/uv_grid_opengl.jpg');
+textuur.colorSpace = THREE.SRGBColorSpace;  // kleuren kloppend houden
+
+const vorm = new THREE.Mesh(
+  new THREE.BoxGeometry(2.2, 2.2, 2.2),
+  new THREE.MeshStandardMaterial({ map: textuur })
+);
+scene.add(vorm);
+
+const zon = new THREE.DirectionalLight(0xffffff, 3);
+zon.position.set(4, 4, 5);
+scene.add(zon, new THREE.AmbientLight(0xffffff, 0.5));
+
+renderer.setAnimationLoop(() => {
+  vorm.rotation.x += 0.005;
+  vorm.rotation.y += 0.01;
+  renderer.render(scene, camera);
+});
+        </script>
+    </div>
+
+    <aside class="callout callout--tip">
+        <p>De regel textuur.colorSpace = THREE.SRGBColorSpace hoort er bij kleurenafbeeldingen altijd bij. Vergeet je hem, dan ziet alles er net iets flets en verkeerd uit - subtiel genoeg om er lang naar te zoeken.</p>
+    </aside>
+
+    <aside class="callout callout--weetje">
+        <span class="callout-label">Weetje</span>
+        <p>UV-coördinaten heten zo omdat x en y al bezet waren door de 3D-ruimte. U loopt horizontaal door de afbeelding, V verticaal, beide van 0 tot 1. Het testraster met letters en cijfers bestaat precies om te zien welk (U, V)-vakje waar belandt.</p>
+    </aside>
+</section>
+
+<section>
+    <h2>Eigen afbeeldingen</h2>
+    <p>Alles wat loadImage() kon laden, kan TextureLoader ook: foto's, je eigen tekeningen, zelfs een p5-export. Let op twee dingen:</p>
+    <ul>
+        <li>De afbeelding moet via dezelfde server bereikbaar zijn (geen file://, en andermans servers blokkeren vaak - hetzelfde CORS-verhaal als bij p5).</li>
+        <li>Afmetingen in machten van twee (256, 512, 1024) renderen het efficiëntst.</li>
+    </ul>
+    <p>In je lokale clone zit een hele map om mee te spelen: <code>three.js/examples/textures/</code> - van baksteen tot lavasteen.</p>
+</section>
+
+<div class="topic-oefeningen">
+    <details>
+        <summary><h2>Oefeningen</h2></summary>
+        <div class="oefening-niveau" data-niveau="1">
+            <h3>Nabootsen</h3>
+            <p class="oefening-niveau-beschrijving">Pas bestaande code aan - verander één waarde en bekijk het resultaat.</p>
+            <div class="oefening-kaart">
+                <h4>Kistje</h4>
+                <p>Vervang het UV-raster door ../three.js/examples/textures/crate.gif - de beroemdste kist van het internet.</p>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="2">
+            <h3>Variëren</h3>
+            <p class="oefening-niveau-beschrijving">Breid een voorbeeld uit met eigen aanpassingen.</p>
+            <div class="oefening-kaart">
+                <h4>Bakstenen muur met reliëf</h4>
+                <p>Gebruik brick_diffuse.jpg als map én brick_bump.jpg als bumpMap op een PlaneGeometry. Beweeg een PointLight erlangs en zie het reliëf verschijnen.</p>
+                <details class="oefening-hint"><summary>Hint</summary><pre><code>const mat = new THREE.MeshStandardMaterial({
+  map: lader.load('../three.js/examples/textures/brick_diffuse.jpg'),
+  bumpMap: lader.load('../three.js/examples/textures/brick_bump.jpg'),
+  bumpScale: 1.5
+});</code></pre></details>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="3">
+            <h3>Creëren</h3>
+            <p class="oefening-niveau-beschrijving">Bouw iets nieuws met de concepten die je hebt geleerd.</p>
+            <div class="oefening-kaart">
+                <h4>p5 als textuurfabriek</h4>
+                <p>Maak in p5 een generatief patroon, exporteer het met saveCanvas() als png, en wikkel het om een three.js-bol of -kubus. Jouw twee werelden, letterlijk aan elkaar geplakt.</p>
+            </div>
+        </div>
+    </details>
+</div>

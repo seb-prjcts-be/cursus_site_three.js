@@ -1,0 +1,130 @@
+<div class="intro">
+    <p>Beweging werkt in three.js zoals in p5: elke frame een klein beetje veranderen. Alleen gebruik je geen frameCount maar een Timer - en die denkt in seconden.</p>
+</div>
+
+<div class="kernpunten">
+    <span class="kernpunten-label">Kernpunten</span>
+    <ul>
+        <li><code>renderer.setAnimationLoop(fn)</code> is je draw(): ongeveer 60 keer per seconde</li>
+        <li><code>THREE.Timer</code> → <code>update()</code> + <code>getElapsed()</code> geeft de verstreken tijd in seconden</li>
+        <li>Tijd-gebaseerd animeren is framerate-onafhankelijk: op elk scherm even snel</li>
+        <li>Je p5-gereedschap blijft werken: <code>Math.sin()</code>, <code>Math.cos()</code> en lerp-denken</li>
+    </ul>
+</div>
+
+<section>
+    <h2>Van frameCount naar Timer</h2>
+    <p>In p5 schreef je vaak <code>rotateY(frameCount * 0.01)</code>. Dat kan hier ook (<code>mesh.rotation.y += 0.01</code>), maar er is een betere gewoonte: animeer op tijd.</p>
+    <pre><code>const timer = new THREE.Timer();
+
+renderer.setAnimationLoop(() => {
+  timer.update();                     // intern bijwerken, één keer per frame
+  const t = timer.getElapsed();       // seconden sinds de start
+
+  mesh.rotation.y = t;                       // 1 radiaal per seconde
+  mesh.position.y = Math.sin(t * 2) * 1.5;   // op en neer
+
+  renderer.render(scene, camera);
+});</code></pre>
+    <p>Waarom beter? Een telefoon op 30 fps en een gamemonitor op 144 fps tonen nu exact dezelfde beweging. Met frame-tellen draait je sketch op de gamemonitor bijna vijf keer zo snel.</p>
+
+    <aside class="callout callout--tip">
+        <p>Vuistregel om te lezen: rotation.y = t betekent één radiaal per seconde, dus een volledige draai duurt zo'n 6,3 seconden. Wil je het dubbel zo snel? rotation.y = t * 2.</p>
+    </aside>
+</section>
+
+<section>
+    <h2>Een golf van kubussen</h2>
+    <p>Het klassieke p5-patroon "een rij dingen, elk met een fase-verschil in sin()" werkt hier letterlijk hetzelfde. Het enige verschil: de kubussen bestaan al, je wijzigt alleen hun y-positie.</p>
+
+    <div class="three-editor" data-autorun="true">
+        <script type="text/three">
+import * as THREE from 'three';
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xf5f5f5);
+
+const camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 100);
+camera.position.set(0, 4, 12);
+camera.lookAt(0, 0, 0);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+document.body.appendChild(renderer.domElement);
+
+// Eén keer aanmaken, in een array bewaren - zoals een array of objects in p5
+const kubussen = [];
+const geom = new THREE.BoxGeometry(0.6, 0.6, 0.6);
+const mat  = new THREE.MeshStandardMaterial({ color: 0xff007d });
+
+for (let i = 0; i < 15; i++) {
+  const k = new THREE.Mesh(geom, mat);
+  k.position.x = (i - 7) * 0.8;
+  scene.add(k);
+  kubussen.push(k);
+}
+
+const zon = new THREE.DirectionalLight(0xffffff, 3);
+zon.position.set(3, 6, 4);
+scene.add(zon, new THREE.AmbientLight(0xffffff, 0.4));
+
+const timer = new THREE.Timer();
+renderer.setAnimationLoop(() => {
+  timer.update();
+  const t = timer.getElapsed();
+
+  kubussen.forEach((k, i) => {
+    k.position.y = Math.sin(t * 2 + i * 0.5) * 1.5;  // fase per kubus
+    k.rotation.x = t + i * 0.2;
+  });
+
+  renderer.render(scene, camera);
+});
+        </script>
+    </div>
+
+    <aside class="callout callout--weetje">
+        <span class="callout-label">Weetje</span>
+        <p>Let op de regel met geom en mat: alle vijftien kubussen delen één geometrie en één materiaal. three.js tekent dat veel sneller dan vijftien aparte kopieën - en het is precies waarom geometry en material gescheiden zijn.</p>
+    </aside>
+</section>
+
+<section>
+    <h2>Soepel naar een doel: lerp</h2>
+    <p>Het p5-patroon <code>x = lerp(x, doelX, 0.1)</code> bestaat ingebouwd op elke positie:</p>
+    <pre><code>// Elke frame 10% dichter bij het doel - soepel afremmen
+mesh.position.lerp(new THREE.Vector3(2, 1, 0), 0.1);</code></pre>
+    <p>Posities in three.js zijn <code>Vector3</code>-objecten, de 3D-versie van p5.Vector. Veel methodes ken je al: <code>add()</code>, <code>sub()</code>, <code>normalize()</code>, <code>dist()</code>... je vector-kennis uit p5 verhuist gewoon mee.</p>
+</section>
+
+<div class="topic-oefeningen">
+    <details>
+        <summary><h2>Oefeningen</h2></summary>
+        <div class="oefening-niveau" data-niveau="1">
+            <h3>Nabootsen</h3>
+            <p class="oefening-niveau-beschrijving">Pas bestaande code aan - verander één waarde en bekijk het resultaat.</p>
+            <div class="oefening-kaart">
+                <h4>Stevigere golf</h4>
+                <p>Maak de golf in het voorbeeld hoger (amplitude 3) en het fase-verschil per kubus kleiner (0.2). Welke vorm krijgt de golf?</p>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="2">
+            <h3>Variëren</h3>
+            <p class="oefening-niveau-beschrijving">Breid een voorbeeld uit met eigen aanpassingen.</p>
+            <div class="oefening-kaart">
+                <h4>Golvend tapijt</h4>
+                <p>Maak van de rij een raster van 10 bij 10 kubussen (geneste lus) en laat de y-positie afhangen van de afstand tot het midden: golven die naar buiten rollen.</p>
+                <details class="oefening-hint"><summary>Hint</summary><pre><code>const afstand = Math.sqrt(x * x + z * z);
+k.position.y = Math.sin(t * 2 - afstand) * 0.8;</code></pre></details>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="3">
+            <h3>Creëren</h3>
+            <p class="oefening-niveau-beschrijving">Bouw iets nieuws met de concepten die je hebt geleerd.</p>
+            <div class="oefening-kaart">
+                <h4>Kinetische sculptuur</h4>
+                <p>Ontwerp een bewegend kunstwerk dat minstens drie bewegingslagen combineert: iets dat draait, iets dat golft, iets dat met lerp() soepel naar wisselende doelposities glijdt (kies elke paar seconden een nieuw doel).</p>
+            </div>
+        </div>
+    </details>
+</div>

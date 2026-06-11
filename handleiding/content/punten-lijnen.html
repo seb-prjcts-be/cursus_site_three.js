@@ -1,0 +1,151 @@
+<div class="intro">
+    <p>Niet alles is een massief object. Met Points teken je duizenden zwevende deeltjes in één klap - sterrenhemels, sneeuw, datawolken. Dit is het three.js-territorium van je p5-particle-systemen, maar dan met tienduizenden tegelijk.</p>
+</div>
+
+<div class="kernpunten">
+    <span class="kernpunten-label">Kernpunten</span>
+    <ul>
+        <li>Een <code>BufferGeometry</code> + lijst van posities + <code>PointsMaterial</code> = een puntenwolk</li>
+        <li>Posities leven in één platte <code>Float32Array</code>: [x1, y1, z1, x2, y2, z2, ...]</li>
+        <li>Eén <code>Points</code>-object met 10.000 punten is véél sneller dan 10.000 meshes</li>
+        <li>Voor lijnen bestaat hetzelfde idee: <code>Line</code> en <code>LineSegments</code></li>
+    </ul>
+</div>
+
+<section>
+    <h2>Van Particle-class naar puntenwolk</h2>
+    <p>In p5 maakte je een class Particle en een array met honderd instanties. Vanaf een paar duizend deeltjes werd dat traag. three.js pakt het anders aan: álle posities in één pakket naar de videokaart:</p>
+    <pre><code>const aantal = 5000;
+const posities = new Float32Array(aantal * 3);  // x, y, z per punt
+
+for (let i = 0; i < aantal; i++) {
+  posities[i * 3]     = (Math.random() - 0.5) * 20;  // x
+  posities[i * 3 + 1] = (Math.random() - 0.5) * 20;  // y
+  posities[i * 3 + 2] = (Math.random() - 0.5) * 20;  // z
+}
+
+const geom = new THREE.BufferGeometry();
+geom.setAttribute('position', new THREE.BufferAttribute(posities, 3));
+
+const wolk = new THREE.Points(geom, new THREE.PointsMaterial({
+  color: 0xff007d,
+  size: 0.05
+}));
+scene.add(wolk);</code></pre>
+
+    <aside class="callout callout--weetje">
+        <span class="callout-label">Weetje</span>
+        <p>Elke geometrie die je tot nu toe gebruikte - BoxGeometry, SphereGeometry - is óók gewoon een BufferGeometry met zo'n positie-lijst, plus driehoek-informatie. Je kijkt hier dus onder de motorkap van alles wat je al kent.</p>
+    </aside>
+</section>
+
+<section>
+    <h2>Probeer het: een ademende sterrenbol</h2>
+    <p>Vijfduizend punten op een bol-oppervlak, zacht golvend. De hele wolk draait als één object - want het ís één object:</p>
+
+    <div class="three-editor" data-autorun="true">
+        <script type="text/three">
+import * as THREE from 'three';
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0a0a12);
+
+const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.1, 100);
+camera.position.z = 7;
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+document.body.appendChild(renderer.domElement);
+
+// 5000 punten, verdeeld over een bol-oppervlak
+const aantal = 5000;
+const posities = new Float32Array(aantal * 3);
+for (let i = 0; i < aantal; i++) {
+  // Willekeurig punt op een bol (gelijkmatig verdeeld)
+  const u = Math.random() * Math.PI * 2;
+  const v = Math.acos(2 * Math.random() - 1);
+  const r = 2.5;
+  posities[i * 3]     = r * Math.sin(v) * Math.cos(u);
+  posities[i * 3 + 1] = r * Math.sin(v) * Math.sin(u);
+  posities[i * 3 + 2] = r * Math.cos(v);
+}
+
+const geom = new THREE.BufferGeometry();
+geom.setAttribute('position', new THREE.BufferAttribute(posities, 3));
+
+const wolk = new THREE.Points(geom, new THREE.PointsMaterial({
+  color: 0xff007d,
+  size: 0.04
+}));
+scene.add(wolk);
+
+// Punten hebben geen licht nodig: PointsMaterial is "basic"
+
+const timer = new THREE.Timer();
+renderer.setAnimationLoop(() => {
+  timer.update();
+  const t = timer.getElapsed();
+
+  wolk.rotation.y = t * 0.15;
+  const adem = 1 + Math.sin(t * 1.5) * 0.08;
+  wolk.scale.setScalar(adem);          // de hele wolk ademt
+
+  renderer.render(scene, camera);
+});
+        </script>
+    </div>
+
+    <aside class="callout callout--tip">
+        <p>Zet het aantal eens op 50000 - nog steeds vloeiend. Probeer dat maar eens met 50.000 circle()-aanroepen in p5. Dit is waarom je voor grote deeltjessystemen naar three.js grijpt.</p>
+    </aside>
+</section>
+
+<section>
+    <h2>Punten individueel bewegen</h2>
+    <p>Wil je elk punt apart laten bewegen (zoals je particles in p5), dan wijzig je de waarden in de positie-array en zet je één vlag:</p>
+    <pre><code>const pos = geom.attributes.position;
+for (let i = 0; i < pos.count; i++) {
+  pos.setY(i, pos.getY(i) + Math.sin(t + i) * 0.002);
+}
+pos.needsUpdate = true;   // zeg het tegen de videokaart!</code></pre>
+
+    <aside class="callout callout--let-op">
+        <span class="callout-label">Let op</span>
+        <p>Vergeet je needsUpdate = true, dan beweegt er niets - de videokaart heeft nog de oude kopie. Dit is dé instinker van BufferGeometry, onthoud hem nu alvast.</p>
+    </aside>
+
+    <p>Lijnen werken identiek: zelfde geometrie, ander materiaal en object - <code>new THREE.Line(geom, new THREE.LineBasicMaterial({color: 0xffffff}))</code> verbindt de punten in volgorde. Daarmee teken je banen, grafieken en draadsculpturen.</p>
+</section>
+
+<div class="topic-oefeningen">
+    <details>
+        <summary><h2>Oefeningen</h2></summary>
+        <div class="oefening-niveau" data-niveau="1">
+            <h3>Nabootsen</h3>
+            <p class="oefening-niveau-beschrijving">Pas bestaande code aan - verander één waarde en bekijk het resultaat.</p>
+            <div class="oefening-kaart">
+                <h4>Sneeuwkleur</h4>
+                <p>Maak de punten wit, kleiner (size 0.02) en verdubbel het aantal. Andere wereld, drie getallen.</p>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="2">
+            <h3>Variëren</h3>
+            <p class="oefening-niveau-beschrijving">Breid een voorbeeld uit met eigen aanpassingen.</p>
+            <div class="oefening-kaart">
+                <h4>Kubuswolk</h4>
+                <p>Verdeel de punten over een kubus in plaats van een bol (gewoon drie keer Math.random, zoals in het eerste codeblok) en laat de wolk om twee assen draaien.</p>
+            </div>
+        </div>
+        <div class="oefening-niveau" data-niveau="3">
+            <h3>Creëren</h3>
+            <p class="oefening-niveau-beschrijving">Bouw iets nieuws met de concepten die je hebt geleerd.</p>
+            <div class="oefening-kaart">
+                <h4>Vallende sneeuw</h4>
+                <p>Laat elk punt omlaag bewegen via de positie-array (met needsUpdate). Punt onder de vloer? Teleporteer het terug naar boven. Combineer met fog uit de vorige les voor een sneeuwstorm.</p>
+                <details class="oefening-hint"><summary>Hint</summary><pre><code>let y = pos.getY(i) - 0.02;
+if (y < -5) y = 5;
+pos.setY(i, y);</code></pre></details>
+            </div>
+        </div>
+    </details>
+</div>

@@ -1,0 +1,54 @@
+<div class="intro">
+    <p>three.js is de bekendste JavaScript bibliotheek voor 3D in de browser. Waar p5.js gemaakt is om snel te schetsen, is three.js gemaakt om werelden te bouwen.</p>
+</div>
+
+<div class="kernpunten">
+    <span class="kernpunten-label">Kernpunten</span>
+    <ul>
+        <li>three.js is gestart in 2010 door Ricardo Cabello, online bekend als <strong>mrdoob</strong></li>
+        <li>Het bouwt bovenop <strong>WebGL</strong>, dezelfde techniek als p5.js in WEBGL-mode</li>
+        <li>p5.js = snel schetsen, three.js = volwaardige 3D-werelden met materialen, licht en camera's</li>
+        <li>Je schrijft three.js als <strong>ES-module</strong>: met <code>import</code>, niet met een grote globale API</li>
+    </ul>
+</div>
+
+<section>
+    <h2>Wat is three.js?</h2>
+    <p>three.js is een open source bibliotheek die 3D graphics in de browser haalbaar maakt. Rechtstreeks WebGL programmeren is honderden regels code voor één driehoek. three.js verstopt dat werk achter begrijpelijke bouwstenen: een scene, een camera, vormen, materialen en licht.</p>
+    <p>Je vindt three.js overal: in datavisualisaties, productconfigurators, muziekvideo's, games en digitale kunst. Veel award-winnende websites draaien op three.js.</p>
+
+    <aside class="callout callout--weetje">
+        <span class="callout-label">Weetje</span>
+        <p>Ricardo Cabello begon three.js in 2010, eerst nog in ActionScript voor Flash. De naam komt van "3D" - drie dimensies. De bibliotheek wordt tot vandaag elke maand bijgewerkt, met releases die r-nummers dragen (r150, r160, ...) in plaats van gewone versienummers.</p>
+    </aside>
+</section>
+
+<section>
+    <h2>Wanneer p5.js, wanneer three.js?</h2>
+    <p>Beide bibliotheken kunnen 3D. Het verschil zit in waar ze voor gemaakt zijn:</p>
+    <ul>
+        <li><strong>p5.js</strong> - snel een idee schetsen, generatieve kunst, 2D, lesgeven, prototypes. 3D kan met WEBGL-mode, maar blijft beperkt.</li>
+        <li><strong>three.js</strong> - serieuze 3D: realistische materialen, schaduwen, 3D-modellen laden, grote scenes met honderden objecten, VR.</li>
+    </ul>
+    <p>Vuistregel: begint je idee bij <em>tekenen</em>, kies p5. Begint het bij <em>een wereld of object in 3D</em>, kies three.js.</p>
+
+    <aside class="callout callout--tip">
+        <p>Je hoeft niet te kiezen voor altijd. De denkpatronen die je in p5 leerde - een setup, een animatieloop, transformaties, sin() en cos() voor beweging - gebruik je in three.js gewoon opnieuw.</p>
+    </aside>
+</section>
+
+<section>
+    <h2>Hoe ziet three.js-code eruit?</h2>
+    <p>Anders dan p5 heeft three.js geen magische functies zoals <code>setup()</code> en <code>draw()</code> die vanzelf bestaan. Je importeert de bibliotheek als module en bouwt alles zelf op:</p>
+    <pre><code>import * as THREE from 'three';
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 1000);
+const renderer = new THREE.WebGLRenderer();</code></pre>
+    <p>Dat voelt eerst formeler dan p5. De winst: je begrijpt precies welke onderdelen er bestaan, want je hebt ze zelf gemaakt. In <a href="#eerste-scene">Je eerste scene</a> bouw je dit ritueel stap voor stap op.</p>
+
+    <aside class="callout callout--let-op">
+        <span class="callout-label">Let op</span>
+        <p>Omdat three.js een ES-module is, werkt je sketch niet als je het HTML-bestand rechtstreeks opent vanaf je schijf (file://). Je hebt een lokale server nodig - net zoals p5 met loadImage(). Op deze site is dat al geregeld: de live editors hieronder draaien gewoon.</p>
+    </aside>
+</section>
