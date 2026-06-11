@@ -444,6 +444,30 @@ function animateNavGroupItems(group) {
     });
 }
 
+// Laat de tag-resultaten (titel + gerelateerde onderwerpen) zacht binnenkomen
+// na een tag-klik; de vaste tag-chips van de pagina blijven gewoon staan.
+function animateTagResultsIn(tagContextEl) {
+    if (typeof gsap === 'undefined') return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const targets = tagContextEl.querySelectorAll(
+        '.tag-context-title, .tag-context-list > li, .tag-context-empty'
+    );
+    if (!targets.length) return;
+
+    gsap.killTweensOf(targets);
+    gsap.from(targets, {
+        opacity: 0,
+        y: 6,
+        duration: 0.25,
+        ease: 'power2.out',
+        stagger: { amount: 0.2 },
+        immediateRender: true,
+        overwrite: 'auto',
+        clearProps: 'opacity,transform'
+    });
+}
+
 function updateActiveNav(activeId) {
     const navLinks = document.querySelectorAll('#nav-list a');
     navLinks.forEach(link => {
@@ -679,18 +703,18 @@ async function renderOnderwerp(onderwerp) {
                         <h3 class="tag-context-title">${escapeHtml(tTag(tag))}</h3>
                         <p class="tag-context-empty">${escapeHtml(t('noOtherTopics'))}</p>
                     `;
-                    return;
+                } else {
+                    tagContextEl.innerHTML = `
+                        <h3 class="tag-context-title">${escapeHtml(t('relatedVia'))} "${escapeHtml(tTag(tag))}"</h3>
+                        <ul class="tag-context-list">
+                            ${related.map(o => `
+                                <li><a href="#${o.id}">${escapeHtml(topicTitle(o))}</a>
+                                <p>${escapeHtml(topicSummary(o))}</p></li>
+                            `).join('')}
+                        </ul>
+                    `;
                 }
-
-                tagContextEl.innerHTML = `
-                    <h3 class="tag-context-title">${escapeHtml(t('relatedVia'))} "${escapeHtml(tTag(tag))}"</h3>
-                    <ul class="tag-context-list">
-                        ${related.map(o => `
-                            <li><a href="#${o.id}">${escapeHtml(topicTitle(o))}</a>
-                            <p>${escapeHtml(topicSummary(o))}</p></li>
-                        `).join('')}
-                    </ul>
-                `;
+                animateTagResultsIn(tagContextEl);
             };
 
             sidebar.addEventListener('click', (event) => {

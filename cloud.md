@@ -60,3 +60,6 @@ de onderwerpen-array in handleiding/main.js.
 - 2026-06-11: GSAP accordeon-stagger in de nav (animateNavGroupItems():
   menu-items glijden trapsgewijs binnen bij openklappen; immediateRender
   tegen flits). Blok: building_blocks\GSAP\accordeon_stagger.
+- 2026-06-11: GSAP tag-resultaten-stagger (animateTagResultsIn(): paneel
+  ververst na tag-klik, resultaten faden gestaggerd in; overwrite auto =
+  laatste klik wint). Blok: building_blocks\GSAP\tag_resultaten_stagger.
