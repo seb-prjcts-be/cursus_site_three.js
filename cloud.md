@@ -54,3 +54,6 @@ de onderwerpen-array in handleiding/main.js.
   syntax-kleuring, regelnummers, haakjes-match. editor.js valt stil terug
   op de gewone textarea als de CDN onbereikbaar is. Token-kleuren in
   huisstijl via editor.css.
+- 2026-06-11: GSAP pagina-overgang toegevoegd aan de handleiding (zelfde
+  blok als p5-cursussite): animatePageIn() in main.js + GSAP 3.13.0 CDN.
+  Herbruikbare uitleg: C:\server\htdocs\building_blocks\GSAP\pagina_overgang.

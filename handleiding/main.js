@@ -513,6 +513,35 @@ function initRouter() {
     loadOnderwerp();
 }
 
+// Laat de blokken van een vers geladen pagina zacht na elkaar verschijnen (GSAP).
+// Valt stil terug op direct tonen als GSAP ontbreekt of de gebruiker minder beweging wil.
+// Zie building_blocks/GSAP/pagina_overgang voor uitleg.
+function animatePageIn(content) {
+    if (typeof gsap === 'undefined') return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const contentRoot = content.querySelector('.onderwerp-content');
+    const targets = contentRoot
+        ? [content.querySelector('.onderwerp-page > h1'), ...contentRoot.children]
+        : Array.from(content.querySelectorAll('.welcome > *'));
+    const sidebar = content.querySelector('.tags-sidebar');
+    if (sidebar) targets.push(sidebar);
+
+    const blocks = targets.filter(Boolean);
+    if (!blocks.length) return;
+
+    gsap.from(blocks, {
+        opacity: 0,
+        y: 14,
+        duration: 0.45,
+        ease: 'power2.out',
+        // amount verdeelt de totale vertraging over alle blokken,
+        // zodat lange pagina's niet seconden blijven nadruppelen
+        stagger: { amount: 0.45 },
+        clearProps: 'opacity,transform'
+    });
+}
+
 function renderWelcome() {
     const content = document.getElementById('content');
 
@@ -536,6 +565,7 @@ function renderWelcome() {
             ${leerpadHtml}
         </div>
     `;
+    animatePageIn(content);
 }
 
 // === Onderwerp renderen ===
@@ -598,6 +628,8 @@ async function renderOnderwerp(onderwerp) {
                 </div>
             </div>
         `;
+
+        animatePageIn(content);
 
         // Tag-zijbalk: klik op een tag toont verwante onderwerpen die die tag delen
         const sidebar = content.querySelector('.tags-sidebar');
