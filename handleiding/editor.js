@@ -116,6 +116,8 @@
 <meta charset="UTF-8">
 <style>
 body { margin: 0; padding: 0; overflow: hidden; background: #ffffff; }
+/* schaal het canvas mee met het paneel; !important verslaat de inline hoogte */
+canvas { max-width: 100%; height: auto !important; }
 #three-error { display: none; padding: 16px; font-family: monospace; font-size: 13px; color: #e74c3c; white-space: pre-wrap; }
 </style>
 <script type="importmap">${JSON.stringify(THREE_IMPORTMAP)}<\/script>

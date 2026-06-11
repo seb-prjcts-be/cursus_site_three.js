@@ -63,3 +63,7 @@ de onderwerpen-array in handleiding/main.js.
 - 2026-06-11: GSAP tag-resultaten-stagger (animateTagResultsIn(): paneel
   ververst na tag-klik, resultaten faden gestaggerd in; overwrite auto =
   laatste klik wint). Blok: building_blocks\GSAP\tag_resultaten_stagger.
+- 2026-06-11: Editor-preview fix: min-width:0 op beide split-panelen
+  (flexbox min-width:auto liet CodeMirror's breedste regel het preview-
+  paneel tot 0px dichtdrukken) + canvas max-width:100%/height:auto in de
+  iframe-template zodat sketches meeschalen i.p.v. afgekapt worden.
